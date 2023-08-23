@@ -2,7 +2,6 @@ import sys
 import jieba
 import json
 import pyperclip
-import re
 
 
 try:
