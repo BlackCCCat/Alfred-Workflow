@@ -5,12 +5,25 @@ import pyperclip
 import re
 
 
+url_pattern = r'(?:https?:\/\/)?(?:www\.)?[-a-zA-Z0-9@:%._\+~#=]{2,256}\.[a-z]{2,6}\b(?:[-a-zA-Z0-9@:%_\+.~#?&\/\/=]*)'
+
+url_regex = re.compile(url_pattern)
+
 try:
 	input_text = sys.argv[1]
 except:
 	input_text = pyperclip.paste()
 
-
+items = []
+match_urls = url_regex.findall(input_text)
+if match_urls:
+	for url in match_urls:
+		items.append({'type':'default',
+					 'title':url,
+					 'subtitle':'URL/Email',
+					 'arg':url
+}
+)
 
 # word segment
 jieba_result = jieba.cut(input_text) # 精确模式
