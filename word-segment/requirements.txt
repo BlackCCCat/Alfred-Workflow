@@ -1,0 +1,4 @@
+jieba
+pyperclip
+json
+re
