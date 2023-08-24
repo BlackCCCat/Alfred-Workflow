@@ -29,7 +29,7 @@ if match_urls:
 jieba_result = jieba.cut(input_text) # 精确模式
 # jieba_result = jieba.cut(input_text,cut_all=True) # 全模式
 # jieba_result = jieba.cut_for_search(input_text) # 搜索模式
-result = [i for i in jieba_result if i!='' and i!='\n' and i!='\r']
+result = [i for i in jieba_result if i!='' and i!='\n' and i!='\r' and i!=' ']
 items = []
 
 if result:
