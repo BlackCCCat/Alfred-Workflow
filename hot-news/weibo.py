@@ -4,8 +4,7 @@ import sys
 
 def main():
     try:
-        if sys.argv[1]:
-            n = int(sys.argv[1])
+        n = int(sys.argv[1])
     except:
         n = 10
 

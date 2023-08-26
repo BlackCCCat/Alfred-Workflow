@@ -6,9 +6,9 @@ from alfred_show import alfred
 import sys
 
 def main():
-    if len(sys.argv) > 1:
+    try:
         n = int(sys.argv[1])
-    else:
+    except:
         n = 2
 
     hn = HotNews(n)
