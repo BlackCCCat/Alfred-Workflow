@@ -1,4 +1,4 @@
-# Word Segment
+# Hot News
 使用Python获取微博和知乎的热搜榜
 # 安装所需模块
 - 如果使用的是macOS自带Python环境(也是Alfred默认使用Python环境):
