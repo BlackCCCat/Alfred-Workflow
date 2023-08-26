@@ -6,11 +6,10 @@ from alfred_show import alfred
 import sys
 
 def main():
-    try:
-        if sys.argv[1]:
-            n = int(sys.argv[1])
-    except:
-        n = 10
+    if len(sys.argv) > 1:
+        n = int(sys.argv[1])
+    else:
+        n = 2
 
     hn = HotNews(n)
 
