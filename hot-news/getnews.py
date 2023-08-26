@@ -19,28 +19,24 @@ class HotNews(object):
         cookies = {
         'SUB': '_2AkMTtDIMf8NxqwFRmP8RzWLkbY10zwrEieKl6MPXJRMxHRl-yT9vqhMDtRB6ODQc4yM_gWCs-qcHIFpIc0srV4-ZzbJK'
         }
-        res = requests.get(url=url, headers=self.headers, cookies=cookies)
+        res = requests.get(url=url, headers=self.headers, cookies=cookies, verify=False)
         tree = etree.HTML(res.content)
         
         wb_hot_news = dict()
-        count = len(wb_hot_news)
-        while count < self.n:
-            for i in range(self.n + 2):
-                link_suffix = tree.xpath(f'//*[@id="pl_top_realtimehot"]/table/tbody/tr[{i}]/td[2]/a/@href')
-                title = tree.xpath(f'//*[@id="pl_top_realtimehot"]/table/tbody/tr[{i}]/td[2]/a/text()')
-                count_str = tree.xpath(f'//*[@id="pl_top_realtimehot"]/table/tbody/tr[{i}]/td[2]/span/text()')
+        
+        for i in range(self.n + 2):
+            counter = len(wb_hot_news)
+            link_suffix = tree.xpath(f'//*[@id="pl_top_realtimehot"]/table/tbody/tr[{i}]/td[2]/a/@href')
+            title = tree.xpath(f'//*[@id="pl_top_realtimehot"]/table/tbody/tr[{i}]/td[2]/a/text()')
+            count_str = tree.xpath(f'//*[@id="pl_top_realtimehot"]/table/tbody/tr[{i}]/td[2]/span/text()')
 
-                if link_suffix and title and count_str:
-                    link = 'https://s.weibo.com' + str(link_suffix[0])
-                    hot_count = re.sub('[\D]', '', count_str[0])
-                    if hot_count:
-                        title_hot = str(title[0]) + f'({hot_count})'
+            if link_suffix and title and count_str:
+                link = 'https://s.weibo.com' + str(link_suffix[0])
+                hot_count = re.sub('[\D]', '', count_str[0])
+                if hot_count:
+                    title_hot = str(title[0]) + f'({hot_count})'
+                    if counter < self.n:
                         wb_hot_news[title_hot] = link
-                    else:
-                        continue
-                else:
-                    continue
-            count = len(wb_hot_news)
 
         return wb_hot_news
     
