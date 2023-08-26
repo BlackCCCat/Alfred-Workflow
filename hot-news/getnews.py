@@ -24,7 +24,7 @@ class HotNews(object):
         
         wb_hot_news = dict()
         
-        for i in range(self.n + 2):
+        for i in range(self.n + 5):
             counter = len(wb_hot_news)
             link_suffix = tree.xpath(f'//*[@id="pl_top_realtimehot"]/table/tbody/tr[{i}]/td[2]/a/@href')
             title = tree.xpath(f'//*[@id="pl_top_realtimehot"]/table/tbody/tr[{i}]/td[2]/a/text()')
