@@ -1,5 +1,9 @@
 # Hot News
+<<<<<<< Updated upstream
 使用 Python 获取微博和知乎的热搜榜
+=======
+使用Python获取微博、知乎、贴吧的热搜榜
+>>>>>>> Stashed changes
 # 安装所需模块
 - 如果使用的是macOS自带Python环境(也是Alfred默认使用Python环境):
 ```shell
@@ -12,5 +16,9 @@ pip install -r requirements.txt
 # 使用方法
 - `wb [n]`获取微博热搜榜前`n`个热搜
 - `zh [n]`获取知乎热搜榜前`n`个热搜
+<<<<<<< Updated upstream
+=======
+- `tb [n]`获取贴吧热搜榜前`n`个热搜
+>>>>>>> Stashed changes
 
 > `[n]`为可选参数,无输入时,默认获取前10个热搜榜
