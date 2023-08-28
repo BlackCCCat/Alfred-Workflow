@@ -13,9 +13,8 @@ def main():
 
     hn = HotNews(n)
 
-    zh_hot_url = 'https://www.zhihu.com/billboard'
 
-    zb_news = hn.getZhihuNews(zh_hot_url)
+    zb_news = hn.getZhihuNews()
     print(alfred(zb_news))
 
 

@@ -16,10 +16,12 @@ class HotNews(object):
         """
         self.n = n
 
-    def getweiboNews(self, url):
+    def getweiboNews(self):
         cookies = {
         'SUB': '_2AkMTtDIMf8NxqwFRmP8RzWLkbY10zwrEieKl6MPXJRMxHRl-yT9vqhMDtRB6ODQc4yM_gWCs-qcHIFpIc0srV4-ZzbJK'
         }
+        url = 'https://s.weibo.com/top/summary'
+
         res = requests.get(url=url, headers=self.headers, cookies=cookies, verify=False)
         tree = etree.HTML(res.content)
         
@@ -42,7 +44,8 @@ class HotNews(object):
         return wb_hot_news
     
     
-    def getZhihuNews(self, url):
+    def getZhihuNews(self):
+        url = 'https://www.zhihu.com/billboard'
         res = requests.get(url=url, headers=self.headers, verify=False)
         tree = etree.HTML(res.content)
 
@@ -62,14 +65,15 @@ class HotNews(object):
             
         return zh_news
     
-    def getTiebaNews(self, url):
+    def getTiebaNews(self):
         cookies = {
                 "BAIDUID": "402F999DB23145A3CEFDE2358591947C:FG=1",
             }
         params={
                 "res_type": "1",
             }
-        
+        url = 'https://c.tieba.baidu.com/hottopic/browse/topicList'
+
         res = requests.get(url=url, headers=self.headers, cookies=cookies, params=params, verify=False)
         html = res.text
 
@@ -96,16 +100,20 @@ class HotNews(object):
                     tb_hot_news[title_hot] = link
         
         return tb_hot_news
+    
+        
 
 
 def main():
-    # hotnews = HotNews(2)
-    # wb_news = hotnews.getweiboNews('https://s.weibo.com/top/summary')
-    # zh_news = hotnews.getZhihuNews('https://www.zhihu.com/billboard')
+    hotnews = HotNews(2)
+    # wb_news = hotnews.getweiboNews()
+    # zh_news = hotnews.getZhihuNews()
     # print(wb_news)
     # print(zh_news)
-    # tb_news = hotnews.getTiebaNews('https://c.tieba.baidu.com/hottopic/browse/topicList?res_type=1')
+    # tb_news = hotnews.getTiebaNews()
     # print(tb_news)
+
+    
     pass
     
 

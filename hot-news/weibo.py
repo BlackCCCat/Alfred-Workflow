@@ -10,9 +10,8 @@ def main():
 
     hn = HotNews(n)
 
-    wb_hot_url = 'https://s.weibo.com/top/summary'
 
-    wb_news = hn.getweiboNews(wb_hot_url)
+    wb_news = hn.getweiboNews()
     print(alfred(wb_news))
 
 

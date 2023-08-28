@@ -10,9 +10,8 @@ def main():
 
     hn = HotNews(n)
 
-    tb_hot_url = 'https://c.tieba.baidu.com/hottopic/browse/topicList'
 
-    tb_news = hn.getTiebaNews(tb_hot_url)
+    tb_news = hn.getTiebaNews()
     print(alfred(tb_news))
 
 
