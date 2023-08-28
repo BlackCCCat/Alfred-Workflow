@@ -96,7 +96,7 @@ class HotNews(object):
                     tb_hot_news[title_hot] = link
         
         return tb_hot_news
-
+        
 
 def main():
     # hotnews = HotNews(2)
