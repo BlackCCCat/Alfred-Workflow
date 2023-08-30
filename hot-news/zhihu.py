@@ -9,7 +9,7 @@ def main():
     try:
         n = int(sys.argv[1])
     except:
-        n = 2
+        n = 10
 
     hn = HotNews(n)
 
