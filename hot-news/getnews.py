@@ -105,7 +105,7 @@ class HotNews(object):
 
 
 def main():
-    hotnews = HotNews(2)
+    # hotnews = HotNews(2)
     # wb_news = hotnews.getweiboNews()
     # zh_news = hotnews.getZhihuNews()
     # print(wb_news)
