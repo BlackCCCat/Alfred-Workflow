@@ -16,5 +16,7 @@ pip install -r requirements.txt
 
 `v2ex [n]`获取v2ex前`n`个热门帖子
 
+`xz [n]`获取小众软件前`n`个热门帖子
+
 
 > `[n]`为可选参数,无输入时,默认获取前10个热搜榜

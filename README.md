@@ -8,6 +8,7 @@
     - [x] 贴吧
     - [x] 知乎日报
     - [x] v2ex
+    - [x] Appinn（小众软件）
 
     
 - [Word Segment](https://github.com/BlackCCCat/Alfred-Workflow/tree/main/word-segment)：中文分词

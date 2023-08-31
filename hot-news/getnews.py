@@ -159,6 +159,37 @@ class HotNews(object):
         
         v2ex_hot_news = {k: temp_v2ex[k] for k in list(temp_v2ex.keys())[:counter]}
         return v2ex_hot_news
+    
+    def getAppinnNews(self):
+        url = 'https://meta.appinn.net'
+        res = requests.get(url=url, verify=False)
+        html = etree.HTML(res.text)
+        # 转为string，便于BeautifulSoup处理
+        string_html = etree.tostring(html, encoding='utf-8').decode()
+        
+        soup = BeautifulSoup(string_html, 'html.parser')
+        a_tags = soup.find_all('a')
+
+        temp_appinn = dict()
+        for a_tag in a_tags:
+            # 网页链接
+            href_value = a_tag['href']
+            if re.search('topic/\d+', href_value):
+                title = a_tag.text
+                if title != '欢迎来到小众软件论坛':
+                    temp_appinn[title] = href_value
+        
+        total = len(temp_appinn)
+        appinn_hot_news = dict()
+        if self.n > total:
+            counter = total
+        else:
+            counter = self.n
+        
+        appinn_hot_news = {k: temp_appinn[k] for k in list(temp_appinn.keys())[:counter]}
+        return appinn_hot_news
+
+
 
 def main():
     # hotnews = HotNews(2)
@@ -171,6 +202,9 @@ def main():
     # rb_news = hotnews.getZHribaoNews()
     # print(rb_news)
     # print(hotnews.getV2exNews())
+
+    # appinn_news = hotnews.getAppinnNews()
+    # print(appinn_news)
     pass
     
 
