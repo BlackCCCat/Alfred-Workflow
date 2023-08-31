@@ -7,8 +7,11 @@
 pip install -r requirements.txt
 # 使用方法
 `wb [n]`获取微博热搜榜前`n`个热搜
+
 `zh [n]`获取知乎热搜榜前`n`个热搜
+
 `tb [n]`获取贴吧热搜榜前`n`个热搜
+
 `rb [n]`获取知乎日报前`n`个热搜
 
 
