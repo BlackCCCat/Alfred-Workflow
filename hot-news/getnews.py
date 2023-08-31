@@ -146,7 +146,7 @@ class HotNews(object):
             # 获取标题文本
             text_content = a_tag.text
             # 取出链接中回复情况拼接到标题
-            title = text_content + href_value.split('#')[-1]
+            title = text_content + '(' + href_value.split('#')[-1] + ')'
             
             temp_v2ex[title] = link
             
