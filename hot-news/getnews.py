@@ -120,7 +120,45 @@ class HotNews(object):
         
         return rb_hot_news
         
+    def getV2exNews(self):
+        url = 'https://www.v2ex.com/'
+        res = requests.get(url=url, verify=False)
+        html = etree.HTML(res.text)
 
+        temp_v2ex = dict()
+
+        # 提取id包含topic-link的所有内容，返回列表
+        html_result = html.xpath('//*[contains(@id, "topic-link")]')
+
+        for result in html_result:
+            # 列表中每个元素转换为字符串
+            result_new = etree.tostring(result, encoding='utf-8').decode()
+            # HTML解析
+            soup = BeautifulSoup(result_new, 'html.parser')
+            
+            # 获取a元素
+            a_tag = soup.find('a')
+            
+            # 获取链接信息
+            href_value = a_tag['href']
+            # 拼接完整链接
+            link = 'https://www.v2ex.com' + href_value
+            # 获取标题文本
+            text_content = a_tag.text
+            # 取出链接中回复情况拼接到标题
+            title = text_content + href_value.split('#')[-1]
+            
+            temp_v2ex[title] = link
+            
+        v2ex_hot_news = dict()
+        total = len(temp_v2ex)
+        if self.n > total:
+            counter = total
+        else:
+            counter = self.n
+        
+        v2ex_hot_news = {k: temp_v2ex[k] for k in list(temp_v2ex.keys())[:counter]}
+        return v2ex_hot_news
 
 def main():
     # hotnews = HotNews(2)
@@ -132,7 +170,7 @@ def main():
     # print(tb_news)
     # rb_news = hotnews.getZHribaoNews()
     # print(rb_news)
-
+    # print(hotnews.getV2exNews())
     pass
     
 

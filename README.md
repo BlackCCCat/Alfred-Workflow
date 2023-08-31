@@ -7,6 +7,7 @@
     - [x] 微博
     - [x] 贴吧
     - [x] 知乎日报
+    - [x] v2ex
 
     
 - [Word Segment](https://github.com/BlackCCCat/Alfred-Workflow/tree/main/word-segment)：中文分词

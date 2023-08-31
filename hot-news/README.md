@@ -14,5 +14,7 @@ pip install -r requirements.txt
 
 `rb [n]`获取知乎日报前`n`个热搜
 
+`v2ex [n]`获取v2ex前`n`个热门帖子
+
 
 > `[n]`为可选参数,无输入时,默认获取前10个热搜榜
