@@ -101,6 +101,24 @@ class HotNews(object):
         
         return tb_hot_news
     
+    def getZHribaoNews(self):
+        url = 'https://daily.zhihu.com/'
+        res = requests.get(url=url, verify=False)
+        tree = etree.HTML(res.content.decode())
+
+        rb_hot_news = dict()
+
+        for i in range(self.n + 5):
+            counter  = len(rb_hot_news)
+            title = tree.xpath(f'/html/body/div[3]/div/div[2]/div/div[1]/div[{i}]/div/a/span/text()')
+            link_suffix = tree.xpath(f'/html/body/div[3]/div/div[2]/div/div[1]/div[{i}]/div/a/@href')
+            if title and link_suffix:
+                title = str(title[0])
+                link = 'https://daily.zhihu.com' + str(link_suffix[0])
+                if counter < self.n:
+                    rb_hot_news[title] = link
+        
+        return rb_hot_news
         
 
 
@@ -112,8 +130,9 @@ def main():
     # print(zh_news)
     # tb_news = hotnews.getTiebaNews()
     # print(tb_news)
+    # rb_news = hotnews.getZHribaoNews()
+    # print(rb_news)
 
-    
     pass
     
 
