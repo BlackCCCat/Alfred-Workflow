@@ -17,6 +17,9 @@ class HotNews(object):
         self.n = n
 
     def getweiboNews(self):
+        """
+        微博热榜
+        """
         cookies = {
         'SUB': '_2AkMTtDIMf8NxqwFRmP8RzWLkbY10zwrEieKl6MPXJRMxHRl-yT9vqhMDtRB6ODQc4yM_gWCs-qcHIFpIc0srV4-ZzbJK'
         }
@@ -45,6 +48,9 @@ class HotNews(object):
     
     
     def getZhihuNews(self):
+        """
+        知乎热榜
+        """
         url = 'https://www.zhihu.com/billboard'
         res = requests.get(url=url, headers=self.headers, verify=False)
         tree = etree.HTML(res.content)
@@ -66,6 +72,9 @@ class HotNews(object):
         return zh_news
     
     def getTiebaNews(self):
+        """
+        百度贴吧热榜
+        """
         cookies = {
                 "BAIDUID": "402F999DB23145A3CEFDE2358591947C:FG=1",
             }
@@ -102,6 +111,9 @@ class HotNews(object):
         return tb_hot_news
     
     def getZHribaoNews(self):
+        """
+        知乎日报
+        """
         url = 'https://daily.zhihu.com/'
         res = requests.get(url=url, verify=False)
         tree = etree.HTML(res.content.decode())
@@ -121,8 +133,14 @@ class HotNews(object):
         return rb_hot_news
         
     def getV2exNews(self):
+        """
+        v2ex热门帖子
+        """
         url = 'https://www.v2ex.com/'
-        res = requests.get(url=url, verify=False)
+        params={
+                "tab": "hot",
+            }
+        res = requests.get(url=url, params=params, verify=False)
         html = etree.HTML(res.text)
 
         temp_v2ex = dict()
@@ -161,6 +179,9 @@ class HotNews(object):
         return v2ex_hot_news
     
     def getAppinnNews(self):
+        """
+        小众软件帖子
+        """
         url = 'https://meta.appinn.net'
         res = requests.get(url=url, verify=False)
         html = etree.HTML(res.text)
