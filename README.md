@@ -12,7 +12,7 @@
 
     
 - [Word Segment](https://github.com/BlackCCCat/Alfred-Workflow/tree/main/word-segment)：中文分词
-- [History of Today]()：历史上的今天
+- [History of Today](https://github.com/BlackCCCat/Alfred-Workflow/tree/main/history-of-today)：历史上的今天
 
 
  
