@@ -13,6 +13,8 @@
     
 - [Word Segment](https://github.com/BlackCCCat/Alfred-Workflow/tree/main/word-segment)：中文分词
 - [History of Today](https://github.com/BlackCCCat/Alfred-Workflow/tree/main/history-of-today)：历史上的今天
+- [Get App Icon](https://github.com/BlackCCCat/Alfred-Workflow/tree/main/icon-extractor)：App图标下载
+    - 修改自：[get app icon](https://github.com/packal/repository/tree/master/com.mcskrzypczak.extracticon)，修复一些bug
 
 
  
