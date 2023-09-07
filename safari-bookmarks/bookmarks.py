@@ -21,7 +21,7 @@ class BookMarks():
             self.res[_title] = link
         return self.res
 
-    def show(self, data):
+    def show(self, data: dict) -> str:
         items = []
         for _title in data:
             link = data[_title]
@@ -46,7 +46,7 @@ class BookMarks():
 
 
 
-def showNoneFileInfo(wk_path, bk_path):
+def showNoneFileInfo(wk_path):
     items = [
         {
          'type':'default',
@@ -71,7 +71,7 @@ def main():
         data = bk.getBookmarks()
         result_json = bk.show(data)
     else:
-        result_json = showNoneFileInfo(current_dir, html_dir)
+        result_json = showNoneFileInfo(current_dir)
     
     print(result_json)
 
