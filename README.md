@@ -15,7 +15,7 @@
 - [History of Today](https://github.com/BlackCCCat/Alfred-Workflow/tree/main/history-of-today)：历史上的今天
 - [Get App Icon](https://github.com/BlackCCCat/Alfred-Workflow/tree/main/icon-extractor)：App图标下载
     - 修改自：[get app icon](https://github.com/packal/repository/tree/master/com.mcskrzypczak.extracticon)，修复一些bug
-- [Safari Bookmarks](https://github.com/BlackCCCat/Alfred-Workflow/tree/main/safari-bookmarks)：查看或搜索Safari浏览器的Bookmarks或Favorites
+- [Safari Bookmarks](https://github.com/BlackCCCat/Alfred-Workflow/tree/main/safari-bookmarks)：查看或搜索Safari浏览器的Bookmarks或Favorites，查看或搜索Safari浏览器的History
 
 
  
