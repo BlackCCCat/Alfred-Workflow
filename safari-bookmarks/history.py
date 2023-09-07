@@ -80,10 +80,10 @@ class History():
             _time = line[3]
             visit_time = timeFormat(_time)
             line_dict = {
-            'type':'default',
-            'title':_title,
-            'subtitle':f'{visit_count} visits on {visit_time} - {link}',
-            'arg':link
+            'type': 'default',
+            'title': link if _title == '' else _title,
+            'subtitle': f'{visit_count} visits on {visit_time} - {link}',
+            'arg': link
             }
             items.append(line_dict)
     
