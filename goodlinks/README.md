@@ -1,3 +1,5 @@
+**标签功能有一些bug，修复中...**
+
 # Goodlinks
 
 一款与Mac端app [Goodlinks](https://apps.apple.com/us/app/goodlinks/id1474335294) 联动的插件
