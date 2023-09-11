@@ -28,7 +28,7 @@ def search(target, ld):
                 "type": "default",
                 "title": result['title'],
                 "subtitle": result['summary'],
-                "arg": f"goodlinks://x-callback-url/open?url={result['url']}",
+                "arg": f"goodlinks://x-callback-url/open?id={result['id']}",
                 "icon":{
                     "path": icon_path
                 }

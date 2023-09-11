@@ -85,7 +85,7 @@ class MapData():
                 "type": "default",
                 "title": link_dict['title'],
                 "subtitle": link_dict['summary'],
-                "arg": f"goodlinks://x-callback-url/open?url={link_dict['url']}",
+                "arg": f"goodlinks://x-callback-url/open?id={link_dict['id']}", # f"goodlinks://x-callback-url/open?url={link_dict['url']}",
                 "icon":{
                     "path": icon_path
                 }
