@@ -9,7 +9,7 @@ def search(target, ld):
     items_list = []
     searched_res = []
     for db_dict in ld:
-        if re.search(target, db_dict['tags'], flags=re.IGNORECASE):
+        if re.search(target, str(db_dict['title']) + str(db_dict['summary']), flags=re.IGNORECASE):
             searched_res.append(db_dict)
         else:
             continue
@@ -48,8 +48,9 @@ def main():
     else:
         tag_target = ''
         target = ''
+    
 
-    ld = ShowTags().run(tag_target)
+    ld = ShowTags.run(tag_target)
     result = search(target, ld)
     print(result)
 
