@@ -80,6 +80,29 @@ class Database():
             return table_state
         except sqlite3.Error as e:
             raise Exception(f"SQL Error: {e}")
+        
+    def readContentTable(self):
+        """
+        load table content
+        TABLE "content" :
+        CREATE TABLE "content" ("id" TEXT PRIMARY KEY, "content" TEXT COLLATE NOCASE, "wordCount" INTEGER NOT NULL, "videoDuration" INTEGER)
+        return: table_content: list(dict)
+        """
+        table_content = []
+        try:
+            conn = sqlite3.connect(self.db)
+            cursor = conn.cursor()
+            cursor.execute("""
+                           select id, content
+                           from content
+                           """)
+            for row in cursor: 
+                row_dict = dict()
+                row_dict['id'], row_dict['content'] = row[0], row[1]
+                table_content.append(row_dict)
+            return table_content
+        except sqlite3.Error as e:
+            raise Exception(f"SQL Error: {e}")
 
 
 
@@ -88,8 +111,11 @@ def main():
     # table_state = DB.readStateTable()
     # print(table_state)
 
-    table_link = DB.readLinkTable()
-    print(table_link)
+    # table_link = DB.readLinkTable()
+    # print(table_link)
+
+    table_content = DB.readContentTable()
+    print(table_content)
 
 if __name__ == "__main__":
     main()
