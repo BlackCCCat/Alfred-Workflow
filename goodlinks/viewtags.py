@@ -13,7 +13,7 @@ def search(target, ld):
     content_list_dict = DB().readContentTable()
 
     for db_dict in ld:
-        target = re.escape(target)
+        # target = re.escape(target)
         try:
             if re.search(target, str(db_dict['title']) + str(db_dict['summary'] + str([content_dict['content'] for content_dict in content_list_dict if content_dict['id'] == db_dict['id']])), flags=re.IGNORECASE):
                 searched_res.append(db_dict)
