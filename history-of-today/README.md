@@ -10,6 +10,14 @@
 > 数据来源于百度百科
 
 
-# How to use
+## How to use
 1. `cmd + space`呼出Alfred
 2. 输入快捷短语`today` 
+
+
+# History of Anyday
+指定查看某个日期的历史事件
+
+## How to use
+1. `cmd + space`呼出Alfred
+2. 输入快捷短语`anyday [指定日期]`，日期格式为xxxx，如0101代表1月1日 
