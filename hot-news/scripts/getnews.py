@@ -132,13 +132,13 @@ class HotNews(object):
         
         return rb_hot_news
         
-    def getV2exNews(self):
+    def getV2exNews(self, tab='hot'):
         """
         v2ex热门帖子
         """
         url = 'https://www.v2ex.com/'
         params={
-                "tab": "hot",
+                "tab": tab, # "hot",
             }
         res = requests.get(url=url, params=params, verify=False)
         html = etree.HTML(res.text)
@@ -213,7 +213,7 @@ class HotNews(object):
 
 
 def main():
-    # hotnews = HotNews(2)
+    hotnews = HotNews(2)
     # wb_news = hotnews.getweiboNews()
     # zh_news = hotnews.getZhihuNews()
     # print(wb_news)
@@ -222,7 +222,7 @@ def main():
     # print(tb_news)
     # rb_news = hotnews.getZHribaoNews()
     # print(rb_news)
-    # print(hotnews.getV2exNews())
+    print(hotnews.getV2exNews())
 
     # appinn_news = hotnews.getAppinnNews()
     # print(appinn_news)
