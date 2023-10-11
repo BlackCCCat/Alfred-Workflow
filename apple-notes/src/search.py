@@ -2,10 +2,10 @@ import re
 
 class Search():
     @staticmethod
-    def search(item, target, type=None):
+    def searchItem(item, target, type=None):
         """
-        搜索item内容，type为item的键，不指定时搜索title、subtitle、arg
-        :return:返回True或者False
+        搜索item内容,type为item的键,不指定时搜索title、subtitle、arg
+        :return: True或者False
         """
         try:
             origin_str = item[type]

@@ -50,7 +50,7 @@ def main():
                 target = sys.argv[1]
             if len(sys.argv) > 2:
                 target = ' '.join(sys.argv[1:])
-            search_res = Search.search(item, target)
+            search_res = Search.searchItem(item, target)
         except:
             search_res = True
 
