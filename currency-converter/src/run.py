@@ -111,13 +111,21 @@ class Converter(FormatToAlfred):
 
 def main():
     try:
-        api = sys.argv[1]
-        sentence = ' '.join(sys.argv[2:])
+        params = sys.argv[1:]
+        if len(params[-1]) == 32:
+            api = params[-1]
+        else:
+            api = Configure.API
+        if api:
+            sentence = ' '.join(params[:-1])
+            converter_tool = Converter(api)
+            converter_tool.run(sentence)
+        else:
+            print(CommonMsg.API_NOT_FOUND)
     except:
-        api = Configure.API
-        sentence = ' '.join(sys.argv[1:])
-    converter_tool = Converter(api)
-    converter_tool.run(sentence)
+        print(CommonMsg.PARAM_ERROR)
+        
+    
 
 
 
