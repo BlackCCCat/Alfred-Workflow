@@ -1,6 +1,8 @@
 # Alfred-Workflow
 自学自建自用Alfred Workflow
 
+- [Currency Converter](https://github.com/BlackCCCat/Alfred-Workflow/tree/main/currency-converter)：汇率转换
+
 
 - [Hot News](https://github.com/BlackCCCat/Alfred-Workflow/tree/main/hot-news)：获取热搜榜信息（标题、链接）
     - [x] 知乎
