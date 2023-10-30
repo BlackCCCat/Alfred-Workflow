@@ -97,7 +97,7 @@ class Converter(FormatToAlfred):
         运行
         :param sentence: 命令
         """
-        regex = '([0-9]+\.?[0-9]*)\x20?([a-zA-Z]+)(\x20+to\x20+|\x20+in\x20+|\x20?=\x20?)([a-zA-Z]+)'
+        regex = '([0-9]+\.?[0-9]*)\x20?([a-zA-Z]{3})(\x20+to\x20+|\x20+in\x20+|\x20?=\x20?)([a-zA-Z]{3})'
         match = re.match(regex, sentence)
         if match:
             money = float(match.group(1))
