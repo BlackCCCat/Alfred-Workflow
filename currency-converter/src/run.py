@@ -26,7 +26,7 @@ class Converter(FormatToAlfred):
             if not self.API:
                 print(self.common.API_NOT_FOUND)
                 return
-            print(self.common.GET_MSG)
+            # print(self.common.GET_MSG)
             currency_data = self.currency.getCurrency(self.API)
             self.currency.save(currency_data)
             return
@@ -42,7 +42,7 @@ class Converter(FormatToAlfred):
         
         need_update = self.currency.need_update()
         if need_update:
-            print(self.common.UPDATE_MSG)
+            # print(self.common.UPDATE_MSG)
             currency_data = self.currency.getCurrency(self.API)
             self.currency.save(data=currency_data)
             return
