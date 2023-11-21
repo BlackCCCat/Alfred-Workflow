@@ -15,6 +15,8 @@ class Converter(FormatToAlfred):
         self.currency = Currency
         self.common = CommonMsg
         self.API = api
+        # 初始化直接检查是否需要更新
+        self.checkCurrency()
 
     
     def checkCurrency(self):
@@ -73,7 +75,7 @@ class Converter(FormatToAlfred):
         :param from_currency: 转换源货币
         :param to_currency: 转换目标货币
         """
-        self.checkCurrency()
+        # self.checkCurrency()
         currency_data = self.readCurrency()
         if currency_data:
             from_rate = currency_data.get(from_currency.upper(), 1)
