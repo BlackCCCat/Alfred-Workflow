@@ -116,10 +116,11 @@ def main():
         params = sys.argv[1:]
         if len(params[-1]) == 32:
             api = params[-1]
+            sentence = ' '.join(params[:-1])
         else:
             api = Configure.API
+            sentence = ' '.join(params)
         if api:
-            sentence = ' '.join(params[:-1])
             converter_tool = Converter(api)
             converter_tool.run(sentence)
         else:
