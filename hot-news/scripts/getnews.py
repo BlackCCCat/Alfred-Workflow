@@ -4,6 +4,10 @@ import re
 import json
 from bs4 import BeautifulSoup
 
+"""
+为便于学习，旧代码仅注释，未删除
+"""
+
 class HotNews(object):
     headers = {
             "User-Agent":"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/116.0.0.0 Safari/537.36",
@@ -64,11 +68,17 @@ class HotNews(object):
         for data in list_data:
             counter = len(zh_news)
             title = data['target']['titleArea']['text']
+            desc = data['target']['excerptArea']['text']
             link = data['target']['link']['url']
             hot_count = data['target']['metricsArea']['text'].replace('热度', '')
 
+            if desc:
+                describes = ' 📜' + desc
+            else:
+                describes = ''
+
             if counter < self.n:
-                zh_news[title] = {'hot': '🔥' + hot_count, 'link': link}
+                zh_news[title] = {'hot': '🔥' + hot_count + describes, 'link': link}
                 continue
             
         return zh_news
@@ -95,6 +105,7 @@ class HotNews(object):
         for i in range(self.n + 5):
             counter = len(tb_hot_news)
             text_infos = soup.select(f"body > div.wrap1 > div > div.bang-bg > div > div.topic-body.clearfix > div.main > ul > li:nth-child({i}) > div > div > a")
+            desc_infos = soup.select(f"body > div.wrap1 > div > div.bang-bg > div > div.topic-body.clearfix > div.main > ul > li:nth-child({i}) > div > p")
             count_strs = soup.select(f"body > div.wrap1 > div > div.bang-bg > div > div.topic-body.clearfix > div.main > ul > li:nth-child({i}) > div > div > span.topic-num")
 
             if text_infos and count_strs:
@@ -105,8 +116,16 @@ class HotNews(object):
                 for count_str in count_strs:
                     counter_str = count_str.text.replace('实时讨论','')
 
+                for desc in desc_infos:
+                    desc_str = desc.text
+                
+                if desc_str:
+                    describes = ' 📜' + desc_str
+                else:
+                    describes = ''
+
                 if counter < self.n:
-                    tb_hot_news[title] = {'hot': '🔥' + counter_str, 'link': link}
+                    tb_hot_news[title] = {'hot': '🔥' + counter_str + describes, 'link': link}
         
         return tb_hot_news
     
@@ -145,29 +164,50 @@ class HotNews(object):
 
         temp_v2ex = dict()
 
-        # 提取id包含topic-link的所有内容，返回列表
-        html_result = html.xpath('//*[contains(@id, "topic-link")]')
-
+        html_result = html.xpath('//*[contains(@class, "cell item")]')
         for result in html_result:
-            # 列表中每个元素转换为字符串
-            result_new = etree.tostring(result, encoding='utf-8').decode()
-            # HTML解析
-            soup = BeautifulSoup(result_new, 'html.parser')
+            # 标题等数据在span后的class下
+            title_elements = result.xpath('.//span[contains(@class, "item_title")]/a/text()')
+            title = title_elements[0]
+
+            # 链接后缀在href下
+            _link_suffix = result.xpath('.//span[contains(@class, "item_title")]/a/@href')
+            link_suffix = _link_suffix[0]
+            link = 'https://www.v2ex.com' + link_suffix
+
+            node_elements = result.xpath('.//span[contains(@class, "topic_info")]/a/text()')
+            node = node_elements[0]
+
+            # 回复数据是在a后的class下
+            hot_elements = result.xpath('.//a[contains(@class, "count_livid")]/text()')
+            hot_count = hot_elements[0]
+
+
+            temp_v2ex[title] = {'hot': '🌳' + node + ' 🔥' + str(hot_count), 'link': link}
+
+
+        # 提取id包含topic-link的所有内容，返回列表
+        # html_result = html.xpath('//*[contains(@id, "topic-link")]')
+        # for result in html_result:
+        #     # 列表中每个元素转换为字符串
+        #     result_new = etree.tostring(result, encoding='utf-8').decode()
+        #     # HTML解析
+        #     soup = BeautifulSoup(result_new, 'html.parser')
             
-            # 获取a元素
-            a_tag = soup.find('a')
+        #     # 获取a元素
+        #     a_tag = soup.find('a')
             
-            # 获取链接信息
-            href_value = a_tag['href']
-            # 拼接完整链接
-            link = 'https://www.v2ex.com' + href_value
-            # 获取标题文本
-            text_content = a_tag.text
-            # 取出链接中回复情况拼接到标题
-            title = text_content
-            reply_count = href_value.split('#')[-1].replace('reply', '')
+        #     # 获取链接信息
+        #     href_value = a_tag['href']
+        #     # 拼接完整链接
+        #     link = 'https://www.v2ex.com' + href_value
+        #     # 获取标题文本
+        #     text_content = a_tag.text
+        #     # 取出链接中回复情况拼接到标题
+        #     title = text_content
+        #     reply_count = href_value.split('#')[-1].replace('reply', '')
             
-            temp_v2ex[title] = {'hot': '💬' + reply_count, 'link': link}
+        #     temp_v2ex[title] = {'hot': '💬' + reply_count, 'link': link}
             
         v2ex_hot_news = dict()
         total = len(temp_v2ex)
@@ -186,20 +226,35 @@ class HotNews(object):
         url = 'https://meta.appinn.net'
         res = requests.get(url=url, verify=False)
         html = etree.HTML(res.text)
-        # 转为string，便于BeautifulSoup处理
-        string_html = etree.tostring(html, encoding='utf-8').decode()
-        
-        soup = BeautifulSoup(string_html, 'html.parser')
-        a_tags = soup.find_all('a')
 
         temp_appinn = dict()
-        for a_tag in a_tags:
-            # 网页链接
-            href_value = a_tag['href']
-            if re.search(r'topic/\d+', href_value):
-                title = a_tag.text
-                if title != '欢迎来到小众软件论坛':
-                    temp_appinn[title] = {'hot': '', 'link': href_value}
+
+        html_result = html.xpath('//*[contains(@class, "topic-list-item")]')
+        for result in html_result:
+            title_elements = result.xpath('.//span[contains(@class, "link-top-line")]/a/text()')
+            title = title_elements[0]
+
+            _link_suffix = result.xpath('.//span[contains(@class, "link-top-line")]/a/@href')
+            link_suffix = _link_suffix[0]
+            link = url + link_suffix
+
+            temp_appinn[title] = {'hot': '', 'link': link}
+
+
+        # # 转为string，便于BeautifulSoup处理
+        # string_html = etree.tostring(html, encoding='utf-8').decode()
+        
+        # soup = BeautifulSoup(string_html, 'html.parser')
+        # a_tags = soup.find_all('a')
+
+        # temp_appinn = dict()
+        # for a_tag in a_tags:
+        #     # 网页链接
+        #     href_value = a_tag['href']
+        #     if re.search(r'topic/\d+', href_value):
+        #         title = a_tag.text
+        #         if title != '欢迎来到小众软件论坛':
+        #             temp_appinn[title] = {'hot': '', 'link': href_value}
         
         total = len(temp_appinn)
         appinn_hot_news = dict()
