@@ -38,7 +38,7 @@ class HotNews(object):
 
             if link_suffix and title and count_str:
                 link = 'https://s.weibo.com' + str(link_suffix[0])
-                hot_count = re.sub('[\D]', '', count_str[0])
+                hot_count = re.sub(r'[\D]', '', count_str[0])
                 if hot_count:
                     title_hot = str(title[0])
                     if counter < self.n:
@@ -196,7 +196,7 @@ class HotNews(object):
         for a_tag in a_tags:
             # 网页链接
             href_value = a_tag['href']
-            if re.search('topic/\d+', href_value):
+            if re.search(r'topic/\d+', href_value):
                 title = a_tag.text
                 if title != '欢迎来到小众软件论坛':
                     temp_appinn[title] = {'hot': '', 'link': href_value}
