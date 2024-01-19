@@ -40,9 +40,9 @@ class HotNews(object):
                 link = 'https://s.weibo.com' + str(link_suffix[0])
                 hot_count = re.sub('[\D]', '', count_str[0])
                 if hot_count:
-                    title_hot = str(title[0]) + f'({hot_count})'
+                    title_hot = str(title[0])
                     if counter < self.n:
-                        wb_hot_news[title_hot] = link
+                        wb_hot_news[title_hot] = {'hot': '🔥' + str(hot_count), 'link': link}
 
         return wb_hot_news
     
@@ -63,10 +63,12 @@ class HotNews(object):
         list_data = dict_data['initialState']['topstory']['hotList']
         for data in list_data:
             counter = len(zh_news)
-            title = data['target']['titleArea']['text'] + '(' + data['target']['metricsArea']['text'] + ')'
+            title = data['target']['titleArea']['text']
             link = data['target']['link']['url']
+            hot_count = data['target']['metricsArea']['text'].replace('热度', '')
+
             if counter < self.n:
-                zh_news[title] = link
+                zh_news[title] = {'hot': '🔥' + hot_count, 'link': link}
                 continue
             
         return zh_news
@@ -101,12 +103,10 @@ class HotNews(object):
                     title = text_info.text
                         
                 for count_str in count_strs:
-                    counter_str = count_str.text
-
-                title_hot = title + f'({counter_str})'
+                    counter_str = count_str.text.replace('实时讨论','')
 
                 if counter < self.n:
-                    tb_hot_news[title_hot] = link
+                    tb_hot_news[title] = {'hot': '🔥' + counter_str, 'link': link}
         
         return tb_hot_news
     
@@ -128,7 +128,7 @@ class HotNews(object):
                 title = str(title[0])
                 link = 'https://daily.zhihu.com' + str(link_suffix[0])
                 if counter < self.n:
-                    rb_hot_news[title] = link
+                    rb_hot_news[title] = {'hot': '', 'link': link}
         
         return rb_hot_news
         
@@ -164,9 +164,10 @@ class HotNews(object):
             # 获取标题文本
             text_content = a_tag.text
             # 取出链接中回复情况拼接到标题
-            title = text_content + '(' + href_value.split('#')[-1] + ')'
+            title = text_content
+            reply_count = href_value.split('#')[-1].replace('reply', '')
             
-            temp_v2ex[title] = link
+            temp_v2ex[title] = {'hot': '💬' + reply_count, 'link': link}
             
         v2ex_hot_news = dict()
         total = len(temp_v2ex)
@@ -198,7 +199,7 @@ class HotNews(object):
             if re.search('topic/\d+', href_value):
                 title = a_tag.text
                 if title != '欢迎来到小众软件论坛':
-                    temp_appinn[title] = href_value
+                    temp_appinn[title] = {'hot': '', 'link': href_value}
         
         total = len(temp_appinn)
         appinn_hot_news = dict()
@@ -222,10 +223,10 @@ def main():
     # print(tb_news)
     # rb_news = hotnews.getZHribaoNews()
     # print(rb_news)
-    print(hotnews.getV2exNews())
+    # print(hotnews.getV2exNews())
 
-    # appinn_news = hotnews.getAppinnNews()
-    # print(appinn_news)
+    appinn_news = hotnews.getAppinnNews()
+    print(appinn_news)
     pass
     
 
