@@ -44,7 +44,10 @@ class HotNews(object):
                 link = 'https://s.weibo.com' + str(link_suffix[0])
                 hot_count = re.sub(r'[\D]', '', count_str[0])
                 if hot_count:
-                    title_hot = str(title[0])
+                    try:
+                        title_hot = str(title[0])
+                    except:
+                        title_hot = 0
                     if counter < self.n:
                         wb_hot_news[title_hot] = {'hot': '🔥' + str(hot_count), 'link': link}
 
@@ -180,7 +183,10 @@ class HotNews(object):
 
             # 回复数据是在a后的class下
             hot_elements = result.xpath('.//a[contains(@class, "count_livid")]/text()')
-            hot_count = hot_elements[0]
+            try:
+                hot_count = int(hot_elements[0])
+            except:
+                hot_count = 0
 
 
             temp_v2ex[title] = {'hot': '🌳' + node + ' 🔥' + str(hot_count), 'link': link}
@@ -278,10 +284,12 @@ def main():
     # print(tb_news)
     # rb_news = hotnews.getZHribaoNews()
     # print(rb_news)
-    # print(hotnews.getV2exNews())
 
-    appinn_news = hotnews.getAppinnNews()
-    print(appinn_news)
+    v2ex_news = hotnews.getV2exNews('apple')
+    print(v2ex_news)
+
+    # appinn_news = hotnews.getAppinnNews()
+    # print(appinn_news)
     pass
     
 
