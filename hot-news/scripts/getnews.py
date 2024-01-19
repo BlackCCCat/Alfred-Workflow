@@ -189,7 +189,7 @@ class HotNews(object):
                 hot_count = 0
 
 
-            temp_v2ex[title] = {'hot': '🌳' + node + ' 🔥' + str(hot_count), 'link': link}
+            temp_v2ex[title] = {'hot': '🌳' + node + ' 💬' + str(hot_count), 'link': link}
 
 
         # 提取id包含topic-link的所有内容，返回列表
