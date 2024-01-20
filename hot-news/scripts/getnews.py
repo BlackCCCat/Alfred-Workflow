@@ -271,25 +271,45 @@ class HotNews(object):
         
         appinn_hot_news = {k: temp_appinn[k] for k in list(temp_appinn.keys())[:counter]}
         return appinn_hot_news
+    
+
+    def getBilibiliHots(self):
+        """
+        bilibili
+        """
+        url = 'https://api.bilibili.com/x/web-interface/popular'
+        params = {
+            "ps": self.n
+        }
+
+        res = requests.get(url=url, headers=self.headers, params=params, verify=False).json()
+        list_data = res['data']['list']
+
+        bilibiliHots = {}
+
+        for data in list_data:
+            title = data['title']
+            name = data['owner']['name']
+            view = data['stat']['view'] if data['stat']['view'] else 0
+            desc = data['dynamic']
+            link = data['short_link_v2']
+
+            if desc:
+                describes = ' 📜' + desc
+            else:
+                describes = ''
+
+            bilibiliHots[title] = {'hot': '👀' + str(view) + ' 👤' + name + describes, 'link': link}
+        
+        return bilibiliHots
 
 
 
 def main():
     hotnews = HotNews(2)
-    # wb_news = hotnews.getweiboNews()
-    # zh_news = hotnews.getZhihuNews()
-    # print(wb_news)
-    # print(zh_news)
-    # tb_news = hotnews.getTiebaNews()
-    # print(tb_news)
-    # rb_news = hotnews.getZHribaoNews()
-    # print(rb_news)
 
-    v2ex_news = hotnews.getV2exNews('apple')
-    print(v2ex_news)
-
-    # appinn_news = hotnews.getAppinnNews()
-    # print(appinn_news)
+    getBilibiliHots = hotnews.getBilibiliHots()
+    print(getBilibiliHots)
     pass
     
 
