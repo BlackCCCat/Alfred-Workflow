@@ -241,10 +241,10 @@ class HotNews(object):
             title = title_elements[0]
 
             _link_suffix = result.xpath('.//span[contains(@class, "link-top-line")]/a/@href')
-            link_suffix = _link_suffix[0]
-            link = url + link_suffix
+            link = _link_suffix[0]
 
-            temp_appinn[title] = {'hot': '', 'link': link}
+            if title != '欢迎来到小众软件论坛':
+                temp_appinn[title] = {'hot': '', 'link': link}
 
 
         # # 转为string，便于BeautifulSoup处理
@@ -306,10 +306,6 @@ class HotNews(object):
 
 
 def main():
-    hotnews = HotNews(2)
-
-    getBilibiliHots = hotnews.getBilibiliHots()
-    print(getBilibiliHots)
     pass
     
 
