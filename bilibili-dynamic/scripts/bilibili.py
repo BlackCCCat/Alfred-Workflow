@@ -28,6 +28,12 @@ class GetDynamic():
             return updated_dynamic
 
         data_list = whole_json_data["data"]["items"]
+        update_num = whole_json_data["data"]["update_num"]
+        if not update_num:
+            updated_dynamic["暂无新动态"] = {"video_info": "🈳", "link": "https://www.bilibili.com"}
+            return updated_dynamic
+        
+
         for data in data_list:
             author = data["modules"]["module_author"]["name"]
             put_time = data["modules"]["module_author"]["pub_time"]
