@@ -30,7 +30,7 @@ class GetDynamic():
         data_list = whole_json_data["data"]["items"]
         update_num = whole_json_data["data"]["update_num"]
         if not update_num:
-            updated_dynamic["暂无新动态"] = {"video_info": "🈳", "link": "https://www.bilibili.com"}
+            updated_dynamic["暂无新动态"] = {"video_info": "🈳", "link": "https://t.bilibili.com"}
             return updated_dynamic
         
 
