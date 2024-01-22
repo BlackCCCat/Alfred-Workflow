@@ -1,6 +1,4 @@
 import requests
-from lxml import etree
-from bs4 import BeautifulSoup
 from warnings import filterwarnings
 from config import AccountInfo
 
