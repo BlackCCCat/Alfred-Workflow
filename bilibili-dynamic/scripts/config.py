@@ -1,9 +1,11 @@
+import os
+
+
 class AccountInfo():
     """
-    填入自己账号对应的信息
+    请填入自己的账号信息
     """
     cookies = {
-        "_uuid": "",
-        "SESSDATA": "",
-        "bili_jct": ""
+        "_uuid": os.getenv('uuid'),
+        "SESSDATA": os.getenv('sessdata'),
     }
