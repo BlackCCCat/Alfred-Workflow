@@ -1,9 +1,11 @@
 import requests
+import os
 from warnings import filterwarnings
 from config import AccountInfo
 
 filterwarnings("ignore")
 
+file_dir = os.path.dirname(os.path.abspath(__file__))
 
 class GetDynamic():
     def request_dynamic(self):
@@ -24,13 +26,13 @@ class GetDynamic():
 
         if whole_json_data["code"] != 0:
             message = whole_json_data["message"]
-            updated_dynamic["获取动态失败"] = {"video_info": f"{message}，请在官网登录并获取Cookies等信息，点击打开官网", "link": "https://www.bilibili.com"}
+            updated_dynamic["获取动态失败"] = {"video_info": f"{message}，请在官网登录并获取Cookies等信息，点击打开官网", "link": "https://www.bilibili.com", "icon": os.path.join(file_dir, 'icon.png')}
             return updated_dynamic
 
         data_list = whole_json_data["data"]["items"]
         update_num = whole_json_data["data"]["update_num"]
         if not update_num:
-            updated_dynamic["暂无新动态"] = {"video_info": "🈳", "link": "https://t.bilibili.com"}
+            updated_dynamic["暂无新动态"] = {"video_info": "🈳", "link": "https://t.bilibili.com", "icon": os.path.join(file_dir, 'icon.png')}
             return updated_dynamic
         
 
@@ -38,11 +40,12 @@ class GetDynamic():
             author = data["modules"]["module_author"]["name"]
             put_time = data["modules"]["module_author"]["pub_time"]
             video_title = data["modules"]["module_dynamic"]["major"]["archive"]["title"]
+            video_cover = data["modules"]["module_dynamic"]["major"]["archive"]["cover"]
             video_play = data["modules"]["module_dynamic"]["major"]["archive"]["stat"]["play"]
             video_danmaku = data["modules"]["module_dynamic"]["major"]["archive"]["stat"]["danmaku"]
             video_link = data["modules"]["module_dynamic"]["major"]["archive"]["jump_url"]
 
-            updated_dynamic[video_title] = {"video_info": f"👤{author} 发布于:{put_time} ▶️ {video_play} 🫧 {video_danmaku}", "link": f"https:{video_link}"}
+            updated_dynamic[video_title] = {"video_info": f"👤{author} 发布于:{put_time} ▶️ {video_play} 🫧 {video_danmaku}", "link": f"https:{video_link}", "icon": video_cover}
             
         return updated_dynamic
     
