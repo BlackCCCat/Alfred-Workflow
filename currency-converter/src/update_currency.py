@@ -1,4 +1,5 @@
 import sys
+import os
 
 from currency import Currency
 from configure import Configure
@@ -15,8 +16,5 @@ def update_currency(api):
 
 
 if __name__ == "__main__":
-    try:
-        api = sys.argv[1]
-    except:
-        api = Configure.API
+    api = os.getenv('API', Configure.API)
     update_currency(api)

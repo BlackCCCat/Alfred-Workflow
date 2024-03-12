@@ -113,13 +113,10 @@ class Converter(FormatToAlfred):
 
 def main():
     try:
+        api = os.getenv('API', Configure.API)
         params = sys.argv[1:]
-        if len(params[-1]) == 32:
-            api = params[-1]
-            sentence = ' '.join(params[:-1])
-        else:
-            api = Configure.API
-            sentence = ' '.join(params)
+        sentence = ' '.join(params)
+
         if api:
             converter_tool = Converter(api)
             converter_tool.run(sentence)
