@@ -39,16 +39,37 @@ class GetDynamic():
         for data in data_list:
             author = data["modules"]["module_author"]["name"]
             put_time = data["modules"]["module_author"]["pub_time"]
+            put_ts = data["modules"]["module_author"]["pub_ts"]
             video_title = data["modules"]["module_dynamic"]["major"]["archive"]["title"]
             video_cover = data["modules"]["module_dynamic"]["major"]["archive"]["cover"]
             video_play = data["modules"]["module_dynamic"]["major"]["archive"]["stat"]["play"]
             video_danmaku = data["modules"]["module_dynamic"]["major"]["archive"]["stat"]["danmaku"]
             video_link = data["modules"]["module_dynamic"]["major"]["archive"]["jump_url"]
+            is_download = self.downloadIMG(author, put_ts, video_cover)
 
-            updated_dynamic[video_title] = {"video_info": f"👤{author} 发布于:{put_time} ▶️ {video_play} 🫧 {video_danmaku}", "link": f"https:{video_link}", "icon": video_cover}
-            
+            if is_download:
+                updated_dynamic[video_title] = {"video_info": f"👤{author} 发布于:{put_time} ▶️ {video_play} 🫧 {video_danmaku}", "link": f"https:{video_link}", "icon": os.path.join(file_dir, 'images', f'{author}_{put_ts}.png')}
+            else:
+                updated_dynamic[video_title] = {"video_info": f"👤{author} 发布于:{put_time} ▶️ {video_play} 🫧 {video_danmaku}", "link": f"https:{video_link}", "icon": os.path.join(file_dir, 'icon.png')}
+                
         return updated_dynamic
     
+    
+    def downloadIMG(self, author, put_ts, imgurl):
+        subdir = 'images'
+        if not os.path.exists(subdir):
+            os.makedirs(subdir)
+        image_path = os.path.join(subdir, f'{author}_{put_ts}.png')
+        res = requests.get(url=imgurl, verify=False)
+        if res.status_code == 200:
+            # 打开一个文件（以二进制写入模式），用来保存图片
+            with open(image_path, 'wb') as f:
+                # 将响应的二进制内容写入文件
+                f.write(res.content)
+            return True
+        else:
+            return False
+        
 
 if __name__ == "__main__":
     get_dynamic = GetDynamic()
