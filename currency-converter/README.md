@@ -16,7 +16,7 @@ class Configure():
 在上面填入自己的API和INTERVAL
 
 ## 开始使用
-1. `money query`进行转换，该方式会按照configure workflow中的时间间隔自动更新汇率，`query`格式应该为以下几种（字母不区分大小写）：
+1. ~~`money query`进行转换，该方式会按照configure workflow中的时间间隔自动更新汇率，`query`格式应该为以下几种（字母不区分大小写）：~~ 直接使用以下方式进行汇率转换
     - 1usd in cny、1cny to jpy
     - 1eur=usd、1gbp = jpy
     - 1 usd in cny、1 usd to cny
