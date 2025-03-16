@@ -22,6 +22,7 @@
 - [Goodlinks](https://github.com/BlackCCCat/Alfred-Workflow/tree/main/goodlinks)：联动Mac端Goodlinks app，查看文章、标签及其阅读情况
 - [Search Notes](https://github.com/BlackCCCat/Alfred-Workflow/tree/main/apple-notes)：搜索Apple Notes中的笔记
 - [Bilibili动态](https://github.com/BlackCCCat/Alfred-Workflow/tree/main/bilibili-dynamic)：获取用户关注up主的视频动态更新（官方API，需提供账号登录信息）
+- [rime配置更新](https://github.com/BlackCCCat/Alfred-Workflow/tree/main/rime-updater)：快速更新rime输入法的配置
 
 
  
