@@ -49,7 +49,7 @@ class RimeUpdater:
                 if mode == 'dict':
                     zip_contents = [name for name in all_zip_contents if "dict" in name or "zh-hans" in name]
                 else:
-                    zip_contents = all_zip_contents
+                    zip_contents = [name for name in all_zip_contents if name != "custom_phrase"]
 
                 # 获取第一层级的文件夹（假设只有一个第一层级文件夹）
                 first_level_folder = None
