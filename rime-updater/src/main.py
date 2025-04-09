@@ -3,6 +3,7 @@ import zipfile
 import io
 import sys
 import os
+import re
 
 from config import rimeConfig
 from alfred import FormatToAlfred
@@ -10,9 +11,13 @@ from alfred import FormatToAlfred
 alfred = FormatToAlfred()
 
 class RimeUpdater:
-    def __init__(self):
-        self.link = rimeConfig.INPUTMETHOD_LINK
-        self.setting_dir = rimeConfig.setting_dir()
+    def __init__(self, link, type):
+        self.link = link
+        self.type = type
+        if self.type == 'dict':
+            self.setting_dir = os.path.join(rimeConfig.setting_dir(), 'cn_dicts')
+        else:
+            self.setting_dir = rimeConfig.setting_dir()
 
 
     def check(self):
@@ -20,6 +25,7 @@ class RimeUpdater:
             res = alfred.item_format(title='No link', subtitle='Please set the link in the workflow settings')
             print(res)
             return False
+
         
         if not self.link.endswith('.zip'):
             res = alfred.item_format(title='Error link', subtitle='Please set the zip file downloadlink')
@@ -28,7 +34,7 @@ class RimeUpdater:
         
         return True
 
-    def download(self, mode='dict'):
+    def download(self):
         check = self.check()
         if not check:
             return
@@ -46,10 +52,7 @@ class RimeUpdater:
             with zipfile.ZipFile(zip_data, 'r') as zip_ref:
                 # 获取ZIP文件中的所有文件名
                 all_zip_contents = zip_ref.namelist()
-                if mode == 'dict':
-                    zip_contents = [name for name in all_zip_contents if "dict" in name or "zh-hans" in name]
-                else:
-                    zip_contents = [name for name in all_zip_contents if name != "custom_phrase"]
+                zip_contents = [name for name in all_zip_contents if "custom_phrase" not in name]
 
                 # 获取第一层级的文件夹（假设只有一个第一层级文件夹）
                 first_level_folder = None
@@ -82,7 +85,21 @@ class RimeUpdater:
         else:
             print(f"下载失败，状态码: {response.status_code}")
 
+def main(link, type):
+    updater = RimeUpdater(link, type)
+    updater.download()
+
 if __name__ == '__main__':
-    updater = RimeUpdater()
-    mode = sys.argv[1] if len(sys.argv) > 1 else 'dict'
-    updater.download(mode=mode)
+    mode = sys.argv[1]
+    if mode == 'dict':
+        link = rimeConfig.DICT_LINK
+        main(link, 'dict')
+
+
+    if mode == 'all':
+        link = rimeConfig.INPUTMETHOD_LINK
+    
+        version = sys.argv[2] if len(sys.argv) > 2 else None
+        if version:
+            link =  re.sub(r'v\d+\.\d+', f'v{version}', link)
+        main(link, 'all')
