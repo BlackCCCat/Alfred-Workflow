@@ -58,33 +58,7 @@ class HotNews(object):
         """
         知乎热榜
         """
-        url = 'https://www.zhihu.com/billboard'
-        res = requests.get(url=url, headers=self.headers, verify=False)
-        tree = etree.HTML(res.content)
-
-        zh_news = dict()
-
-        _ = tree.xpath('//*[@id="js-initialData"]/text()')
-        json_data = _[0].encode('utf-8')
-        dict_data = dict(json.loads(json_data))
-        list_data = dict_data['initialState']['topstory']['hotList']
-        for data in list_data:
-            counter = len(zh_news)
-            title = data['target']['titleArea']['text']
-            desc = data['target']['excerptArea']['text']
-            link = data['target']['link']['url']
-            hot_count = data['target']['metricsArea']['text'].replace('热度', '')
-
-            if desc:
-                describes = ' 📜' + desc
-            else:
-                describes = ''
-
-            if counter < self.n:
-                zh_news[title] = {'hot': '🔥' + hot_count + describes, 'link': link}
-                continue
-            
-        return zh_news
+        pass
     
     def getTiebaNews(self):
         """
