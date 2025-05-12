@@ -11,11 +11,13 @@ from alfred import FormatToAlfred
 alfred = FormatToAlfred()
 
 class RimeUpdater:
-    def __init__(self, link, type):
+    def __init__(self, link, type, model_link=None):
         self.link = link
         self.type = type
+        self.model_link = model_link
         if self.type == 'dict':
             self.setting_dir = os.path.join(rimeConfig.setting_dir(), 'cn_dicts')
+            self.model_dir = rimeConfig.setting_dir()
         else:
             self.setting_dir = rimeConfig.setting_dir()
 
@@ -85,15 +87,29 @@ class RimeUpdater:
         else:
             print(f"下载失败，状态码: {response.status_code}")
 
-def main(link, type):
-    updater = RimeUpdater(link, type)
+
+    def download_model(self):
+        """下载模型文件"""
+        url = self.model_link
+        response = requests.get(url)
+        if response.status_code == 200:
+            with open(os.path.join(self.model_dir, 'wanxiang-lts-zh-hans.gram'), 'wb') as f:
+                f.write(response.content)
+            print("下载模型完成，请重新部署")
+        else:
+            print(f"下载失败，状态码: {response.status_code}")
+
+def main(link, type, model_link=None):
+    updater = RimeUpdater(link, type, model_link)
     updater.download()
+    if model_link:
+        updater.download_model()
 
 if __name__ == '__main__':
     mode = sys.argv[1]
     if mode == 'dict':
         link = rimeConfig.DICT_LINK
-        main(link, 'dict')
+        main(link, 'dict', rimeConfig.MODEL_LINK)
 
 
     if mode == 'all':

@@ -6,6 +6,7 @@ class rimeConfig:
     INPUTMETHOD_LINK = os.getenv('input_method_link') # 输入法地址压缩包地址，如https://github.com/amzxyz/rime_wanxiang_pro/archive/refs/heads/main.zip
     DICT_LINK = os.getenv('dict_link') if os.getenv('dict_link') else os.getenv('input_method_link') # 词库地址压缩包地址，如https://github.com/amzxyz/rime_wanxiang_pro/archive/refs/heads/main.zip
     RIME_ENGINE = os.getenv('rime_engine') # Rime引擎（squirrel/Fcitx）
+    MODEL_LINK = os.getenv('model_link')# 模型地址压缩包地址，如
 
 
     @classmethod
