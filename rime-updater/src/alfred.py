@@ -1,12 +1,15 @@
 import json
+from functools import wraps
 
 class FormatToAlfred():
-    items_list = []
+    
     def __init__(self):
         """
         初始化空字典,用于存放key:items, value:items_list
         """
+        self.items_list = []
         self.items = dict()
+        self.json_dumps_items = ""
 
 
     def output(func):
@@ -15,22 +18,23 @@ class FormatToAlfred():
         :param func: item_format方法
         :return: items_format方法
         """
+        @wraps(func)
         def wrapper(self,*args, **kwargs):
             item = func(self, *args, **kwargs)
-            FormatToAlfred.items_list.append(item)
-            self.items.update({"items":FormatToAlfred.items_list})
-            items = json.dumps(self.items, ensure_ascii=False)
-            return items
+            self.items_list.append(item)
+            self.items.update({"items":self.items_list})
+            self.json_dumps_items = json.dumps(self.items, ensure_ascii=False)
+            return self.json_dumps_items
         return wrapper
 
 
     @output
     def item_format(self,
-        uid = '',
-        type = 'default',
-        title = 'No title',
-        subtitle = '',
-        arg = '',
+        uid = "",
+        type = "default",
+        title = "No title",
+        subtitle = "",
+        arg = "",
         **kwargs
     ):
         """
@@ -61,6 +65,7 @@ class FormatToAlfred():
         
         icon_info = {"icon": icon}
         item.update(icon_info)
+        
         
         return item
     
