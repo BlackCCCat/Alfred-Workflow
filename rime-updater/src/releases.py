@@ -39,7 +39,7 @@ class GetReleases:
                 if asset.get('name'):
                     dicts_name.append(asset.get('name', ''))
             
-            for name in dicts_name:
+            for name in set(dicts_name):
                 if rimeConfig.SCHEMA in name:
                     dicts_alfred.item_format(
                             title=dict['name'],
@@ -60,7 +60,7 @@ class GetReleases:
                 if asset.get('name'):
                     asset_name.append(asset.get('name', ''))
 
-            for name in asset_name:
+            for name in set(asset_name):
                 if rimeConfig.SCHEMA in name:
                     full_alfred.item_format(
                         title=release['name'],
