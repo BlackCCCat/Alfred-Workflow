@@ -13,7 +13,7 @@ class GetReleases:
         self.full_releases = []
         self.dicts = []
         self.full = []
-        self.releases_api = "https://api.github.com/repos/amzxyz/rime_wanxiang_pro/releases"
+        self.releases_api = "https://api.github.com/repos/amzxyz/rime_wanxiang/releases"
 
 
     def get_releases(self):

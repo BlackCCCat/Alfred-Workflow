@@ -14,11 +14,11 @@ class RimeUpdater:
     def download(self, zip_name):
         """下载RIME输入法文件"""
         if 'dict' in zip_name:
-            setting_dir = os.path.join(rimeConfig.setting_dir(), "cn_dicts")
+            setting_dir = os.path.join(rimeConfig.setting_dir(), "zh_dicts_pro")
         else:
             setting_dir = rimeConfig.setting_dir()
         
-        url = f"https://github.com/amzxyz/rime_wanxiang_pro/releases/download/{zip_name}"
+        url = f"https://github.com/amzxyz/rime_wanxiang/releases/download/{zip_name}"
 
         # 1. 下载ZIP文件内容（不保存到磁盘）
         response = requests.get(url)
@@ -32,33 +32,13 @@ class RimeUpdater:
             with zipfile.ZipFile(zip_data, 'r') as zip_ref:
                 # 获取ZIP文件中的所有文件名
                 zip_contents = zip_ref.namelist()
-
-                # 获取第一层级的文件夹（假设只有一个第一层级文件夹）
-                first_level_folder = None
                 for file_name in zip_contents:
-                    # 找到第一个文件夹的路径
-                    if '/' in file_name:  # 判断是否为文件夹
-                        first_level_folder = file_name.split('/')[0]
-                    break
-
-                if first_level_folder:
-                    # 4. 提取文件到指定的路径
-                    output_directory =  setting_dir  # 提取内容的目标路径
-                    os.makedirs(output_directory, exist_ok=True)  # 创建目标目录，如果不存在的话
-
-                    for file_name in zip_contents:
-                        if file_name.startswith(first_level_folder + '/'):
-                            # 去除第一层级文件夹部分，提取文件
-                            extracted_path = os.path.join(output_directory, file_name[len(first_level_folder)+1:])
-
-                            # 创建目标路径所在的目录
-                            if not file_name.endswith('/'):  # 判断是不是文件
-                                os.makedirs(os.path.dirname(extracted_path), exist_ok=True)
-
-
-                                # 解压文件内容到目标路径
-                                with open(extracted_path, 'wb') as f:
-                                    f.write(zip_ref.read(file_name))
+                    if file_name.endswith('/'):
+                        os.makedirs(os.path.join(setting_dir, file_name), exist_ok=True)
+                    else:
+                        out_put_path = os.path.join(setting_dir, file_name)
+                        with open(out_put_path, 'wb') as f:
+                            f.write(zip_ref.read(file_name))
 
             print("下载完成，请重新部署")
         else:
