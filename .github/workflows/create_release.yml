@@ -42,6 +42,15 @@ jobs:
           prerelease: ${{ contains(github.ref_name, '-rc') }}
           files: |
             apple-notes/Notes.alfredworkflow
+            bilibili-dynamic/Bilibili Dynamics.alfredworkflow
+            currency-converter/Currency Converter.alfredworkflow
+            goodlinks/Goodlinks.alfredworkflow
+            history-of-today/History of Today.alfredworkflow
+            hot-news/workflow-packages/HotNews.alfredworkflow
+            icon-extractor/Get App Icon.alfredworkflow
+            rime-updater/wanxiang-updater.alfredworkflow
+            safari-bookmarks/Safari Bookmarks.alfredworkflow
+            word-segment/Word Segment.alfredworkflow
           token: ${{ secrets.AUTO_RELEASE }} 
         env:
           GH_TOKEN: ${{ secrets.AUTO_RELEASE }}  # 使用 PAT 来执行发布
