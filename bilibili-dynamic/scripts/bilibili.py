@@ -20,21 +20,26 @@ class GetDynamic():
             "type": "video",
         }
 
-        res = requests.get(url=url, headers=headers, cookies=AccountInfo.cookies, params=params, verify=False)
-
-        whole_json_data = res.json()
-
-        if whole_json_data["code"] != 0:
-            message = whole_json_data["message"]
-            updated_dynamic["获取动态失败"] = {"video_info": f"{message}，请在官网登录并获取Cookies等信息，点击打开官网", "link": "https://www.bilibili.com", "icon": os.path.join(file_dir, 'icon.png')}
+        cookies_list = AccountInfo.get_valid_cookie()
+        if not cookies_list:
+            updated_dynamic["获取动态失败"] = {"video_info": "未找到有效的bilibili.com cookie，请在官网登录并获取Cookies等信息，点击打开官网", "link": "https://www.bilibili.com", "icon": os.path.join(file_dir, 'icon.png')}
             return updated_dynamic
 
+        for cookie in cookies_list:
+            res = requests.get(url=url, headers=headers, cookies=cookie, params=params, verify=False)
+
+            whole_json_data = res.json()
+
+            if whole_json_data["code"] == 0:
+                break
+
         data_list = whole_json_data["data"]["items"]
-        # update_num = whole_json_data["data"]["update_num"]
-        # if not update_num:
-        #     updated_dynamic["暂无新动态"] = {"video_info": "🈳", "link": "https://t.bilibili.com", "icon": os.path.join(file_dir, 'icon.png')}
-        #     return updated_dynamic
-        
+#         update_num = whole_json_data["data"]["update_num"]
+#         if not update_num:
+#             updated_dynamic["暂无新动态"] = {"video_info": "🈳", "link": "https://t.bilibili.com", "icon": os.path.join(file_dir, 'icon.png')}
+#             return updated_dynamic
+
+
         for data in data_list:
             author = data["modules"]["module_author"]["name"]
             put_time = data["modules"]["module_author"]["pub_time"]
@@ -50,10 +55,10 @@ class GetDynamic():
                 updated_dynamic[video_title] = {"video_info": f"👤{author} 发布于:{put_time} ▶️ {video_play} 🫧 {video_danmaku}", "link": f"https:{video_link}", "icon": os.path.join(file_dir, 'images', f'{author}_{put_ts}.png')}
             else:
                 updated_dynamic[video_title] = {"video_info": f"👤{author} 发布于:{put_time} ▶️ {video_play} 🫧 {video_danmaku}", "link": f"https:{video_link}", "icon": os.path.join(file_dir, 'icon.png')}
-                
+
         return updated_dynamic
-    
-    
+
+
     def downloadIMG(self, author, put_ts, imgurl):
         subdir = 'images'
         if not os.path.exists(subdir):
@@ -68,7 +73,7 @@ class GetDynamic():
             return True
         else:
             return False
-        
+
 
 if __name__ == "__main__":
     get_dynamic = GetDynamic()

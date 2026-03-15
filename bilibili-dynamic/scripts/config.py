@@ -1,11 +1,33 @@
-import os
-
+import browser_cookie3
 
 class AccountInfo():
     """
-    请填入自己的账号信息
+    从浏览器获取cookie
     """
-    cookies = {
-        "_uuid": os.getenv('uuid'),
-        "SESSDATA": os.getenv('sessdata'),
-    }
+    @staticmethod
+    def get_valid_cookie():
+        browsers = {
+            "chrome": browser_cookie3.chrome,
+            "edge": browser_cookie3.edge,
+            "firefox": browser_cookie3.firefox,
+            "brave": browser_cookie3.brave,
+            "opera": browser_cookie3.opera,
+            "safari": browser_cookie3.safari,
+        }
+        cookies_list = []
+
+        for name, loader in browsers.items():
+            try:
+                cj = loader(domain_name=".bilibili.com")
+
+                if not list(cj):
+                    continue
+
+                for cookie in cj:
+                    if cookie.name == 'SESSDATA':
+                        cookies_list.append({cookie.name: cookie.value})
+
+            except Exception:
+                pass
+
+        return cookies_list
