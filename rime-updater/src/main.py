@@ -1,66 +1,95 @@
-import requests
-import zipfile
-import io
 import sys
-import os
-import re
 
-from config import rimeConfig
-class RimeUpdater:
-    def __init__(self):
-        self.model_link = "https://github.com/amzxyz/RIME-LMDG/releases/download/LTS/wanxiang-lts-zh-hans.gram"
-        
+from tasklog import append_log, write_state
+from wanxiang import (
+    WanxiangError,
+    asset_needs_update,
+    component_label,
+    deploy_rime,
+    install_asset,
+    latest_asset,
+    parse_command,
+    status_text,
+)
 
-    def download(self, zip_name):
-        """下载RIME输入法文件"""
-        if 'dict' in zip_name:
-            setting_dir = os.path.join(rimeConfig.setting_dir(), "zh_dicts_pro")
+
+def update_component(component, tag="", name="", force=True, log=None):
+    if log:
+        log(f"检查远端{component_label(component)}资源")
+    asset = latest_asset(component, selected_tag=tag, selected_name=name)
+    if log:
+        log(f"远端{component_label(component)}资源：{asset.tag} / {asset.name}")
+    if not force and not asset_needs_update(asset):
+        if log:
+            log(f"本地记录匹配，跳过{component_label(component)}更新")
+        return f"{component_label(component)}已是最新：{asset.tag} / {asset.name}", False
+    if not force and log:
+        log(f"本地记录不匹配，开始更新{component_label(component)}")
+    return install_asset(asset, log=log), True
+
+
+def run(command, log=None):
+    component, tag, name = parse_command(command)
+    if component == "status":
+        return [status_text(include_records=True)]
+
+    if component == "all":
+        messages = []
+        updated = False
+        for item in ("scheme", "dict", "model"):
+            message, did_update = update_component(item, force=False, log=log)
+            messages.append(message)
+            updated = updated or did_update
+        if updated:
+            messages.append(deploy_rime(log=log))
         else:
-            setting_dir = rimeConfig.setting_dir()
-        
-        url = f"https://github.com/amzxyz/rime_wanxiang/releases/download/{zip_name}"
+            messages.append("本地记录已是最新，跳过部署")
+        return messages
 
-        # 1. 下载ZIP文件内容（不保存到磁盘）
-        response = requests.get(url)
+    if component == "deploy":
+        return [deploy_rime(log=log)]
 
-        # 确保下载成功
-        if response.status_code == 200:
-            # 2. 将下载的二进制数据存储到BytesIO对象中
-            zip_data = io.BytesIO(response.content)
+    if component in {"scheme", "dict", "model"}:
+        message, _updated = update_component(component, tag, name, force=True, log=log)
+        return [message]
 
-            # 3. 使用zipfile模块处理这个BytesIO对象
-            with zipfile.ZipFile(zip_data, 'r') as zip_ref:
-                # 获取ZIP文件中的所有文件名
-                zip_contents = zip_ref.namelist()
-                for file_name in zip_contents:
-                    if file_name.endswith('/'):
-                        os.makedirs(os.path.join(setting_dir, file_name), exist_ok=True)
-                    else:
-                        out_put_path = os.path.join(setting_dir, file_name)
-                        with open(out_put_path, 'wb') as f:
-                            f.write(zip_ref.read(file_name))
-
-            print("下载完成，请重新部署")
-        else:
-            print(f"下载失败，状态码: {response.status_code}")
+    raise WanxiangError(f"未知命令：{command}")
 
 
-    def download_model(self):
-        """下载模型文件"""
-        url = self.model_link
-        response = requests.get(url)
-        if response.status_code == 200:
-            with open(os.path.join(rimeConfig.setting_dir(), 'wanxiang-lts-zh-hans.gram'), 'wb') as f:
-                f.write(response.content)
-            print("下载模型完成，请重新部署")
-        else:
-            print(f"下载失败，状态码: {response.status_code}")
+def run_task(task_id, command):
+    write_state(task_id, status="running", command=command)
+    append_log(task_id, f"任务开始：{command}")
 
-def main(zip_name):
-    updater = RimeUpdater()
-    updater.download(zip_name)
-    updater.download_model()
+    def log(message):
+        append_log(task_id, message)
 
-if __name__ == '__main__':
-    zip_name = sys.argv[1]
-    main(zip_name)
+    try:
+        messages = run(command, log=log)
+    except WanxiangError as exc:
+        append_log(task_id, f"任务失败：{exc}")
+        write_state(task_id, status="failed", command=command, error=str(exc))
+        return 1
+
+    for message in messages:
+        append_log(task_id, message)
+    append_log(task_id, "任务完成")
+    write_state(task_id, status="completed", command=command, result="；".join(messages))
+    return 0
+
+
+def main():
+    if len(sys.argv) > 3 and sys.argv[1] == "--task-id":
+        raise SystemExit(run_task(sys.argv[2], sys.argv[3]))
+
+    command = sys.argv[1] if len(sys.argv) > 1 else "status"
+    component, _tag, _name = parse_command(command)
+    try:
+        messages = run(command)
+        suffix = "。" if component in {"all", "deploy", "status"} else "。请重新部署 RIME。"
+        print("；".join(messages) + suffix)
+    except WanxiangError as exc:
+        print(f"更新失败：{exc}")
+
+
+if __name__ == "__main__":
+    main()

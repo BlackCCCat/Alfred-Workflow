@@ -1,86 +1,196 @@
-import requests
 import sys
-import os
-from datetime import datetime
 
-from config import rimeConfig
-from alfred import FormatToAlfred
+from alfred import error_item, item, output
+from config import MODEL_FILE, RimeConfig
+from wanxiang import (
+    WanxiangError,
+    component_label,
+    list_component_assets,
+    load_records,
+    exclude_file_path,
+    records_path,
+    source_label,
+    status_text,
+)
 
-ABS_DIR = os.path.abspath(os.path.dirname(os.path.dirname(__file__)))
 
-class GetReleases:
-    def __init__(self):
-        self.full_releases = []
-        self.dicts = []
-        self.full = []
-        self.releases_api = "https://api.github.com/repos/amzxyz/rime_wanxiang/releases"
+def menu_items():
+    status = status_text()
+    return [
+        item(
+            title="更新全部",
+            subtitle=f"自动更新方案、词库、模型，完成后部署。{status}",
+            arg="all",
+            uid="menu-all",
+        ),
+        item(
+            title="更新方案",
+            subtitle=f"{RimeConfig.schema_label()}：{RimeConfig.scheme_asset()}",
+            arg="scheme",
+            uid="menu-scheme",
+            autocomplete="更新方案",
+        ),
+        item(
+            title="更新词库",
+            subtitle=f"{RimeConfig.schema_label()}：{RimeConfig.dict_asset()}",
+            arg="dict",
+            uid="menu-dict",
+            autocomplete="更新词库",
+        ),
+        item(
+            title="更新模型",
+            subtitle=MODEL_FILE,
+            arg="model",
+            uid="menu-model",
+            autocomplete="更新模型",
+        ),
+        item(
+            title="查看当前配置",
+            subtitle="进入本地配置和更新记录页面",
+            arg="",
+            uid="menu-status",
+            valid=False,
+            autocomplete="status",
+        ),
+        item(
+            title="重新部署",
+            subtitle="触发当前输入法引擎重新部署 RIME",
+            arg="deploy",
+            uid="menu-deploy",
+        ),
+    ]
 
 
-    def get_releases(self):
-        """获取releases信息"""
-        response = requests.get(self.releases_api)
-        if response.status_code == 200:
-            self.full_releases = response.json()
-            for release in self.full_releases:
-                if 'dict' in release['tag_name']:
-                    self.dicts.append(release)
-                else:
-                    self.full.append(release)
-        else:
-            print(f"获取版本信息失败，状态码: {response.status_code}")
-        
+def all_item():
+    return [
+        item(
+            title="更新全部",
+            subtitle=f"使用 {source_label()} 自动更新方案、词库、模型，完成后部署。{status_text()}",
+            arg="all",
+            uid="all-latest",
+        )
+    ]
 
-    def output_dicts(self):
-        """使用Alfred接口输出词库的releases信息"""
-        dicts_alfred = FormatToAlfred()
-        dicts_name = []
-        for dict in self.dicts:
-            for asset in dict['assets']:
-                if asset.get('name'):
-                    dicts_name.append(asset.get('name', ''))
-            
-            for name in set(dicts_name):
-                if rimeConfig.SCHEMA in name:
-                    dicts_alfred.item_format(
-                            title=dict['name'],
-                            type="default",
-                            subtitle=dict['published_at'],
-                            arg=f"{dict['tag_name']}/{name}",
-                            icontype="",
-                            iconpath=f"{ABS_DIR}/icon.png",
-                        )
-        print(dicts_alfred.json_dumps_items)
 
-    def output_full(self):
-        """使用Alfred接口输出完整输入方案的releases信息"""
-        full_alfred = FormatToAlfred()
-        asset_name = []
-        for release in self.full:
-            for asset in release['assets']:
-                if asset.get('name'):
-                    asset_name.append(asset.get('name', ''))
+def deploy_item():
+    return [
+        item(
+            title="重新部署 RIME",
+            subtitle=f"使用当前配置触发部署。{status_text()}",
+            arg="deploy",
+            uid="deploy-rime",
+        )
+    ]
 
-            for name in set(asset_name):
-                if rimeConfig.SCHEMA in name:
-                    full_alfred.item_format(
-                        title=release['name'],
-                        type="default",
-                        subtitle=release['published_at'],
-                        arg=f"{release['tag_name']}/{name}",
-                        icontype="",
-                        iconpath=f"{ABS_DIR}/icon.png",
-                    )
-        print(full_alfred.json_dumps_items)
+
+def status_items():
+    records = load_records().get("components", {})
+    results = [
+        item(
+            title="返回主菜单",
+            subtitle="回到更新菜单",
+            arg="",
+            uid="status-back",
+            valid=False,
+            autocomplete=" ",
+        ),
+        item(
+            title="当前配置",
+            subtitle=status_text(),
+            arg="",
+            uid="status-config",
+            valid=False,
+        ),
+        item(
+            title="本地记录文件",
+            subtitle=str(records_path()),
+            arg="",
+            uid="status-record-file",
+            valid=False,
+        ),
+        item(
+            title="排除文件",
+            subtitle=str(exclude_file_path()),
+            arg="",
+            uid="status-exclude-file",
+            valid=False,
+        ),
+    ]
+
+    for component in ("scheme", "dict", "model"):
+        record = records.get(component)
+        if not record:
+            results.append(
+                item(
+                    title=f"{component_label(component)}记录",
+                    subtitle="暂无本地记录",
+                    arg="",
+                    uid=f"status-{component}-empty",
+                    valid=False,
+                )
+            )
+            continue
+        title = f"{component_label(component)}：{record.get('tag') or '未知版本'}"
+        subtitle = (
+            f"{record.get('name') or '未知文件'}；"
+            f"{record.get('updated_at') or '未知更新时间'}；"
+            f"{record.get('source_label') or record.get('source') or '未知源'}；"
+            f"{record.get('size') or 0} bytes"
+        )
+        results.append(
+            item(
+                title=title,
+                subtitle=subtitle,
+                arg="",
+                uid=f"status-{component}",
+                valid=False,
+            )
+        )
+
+    return results
+
+
+def component_items(component):
+    assets = list_component_assets(component)
+    if not assets:
+        return [error_item(f"没有找到可用的{component_label(component)}更新")]
+
+    results = []
+    for asset in assets:
+        results.append(
+            item(
+                title=f"{asset.release_title} - {asset.name}",
+                subtitle=f"{source_label()}；更新时间：{asset.display_time}",
+                arg=f"{component}@{asset.tag}@{asset.name}",
+                uid=f"{component}-{asset.tag}-{asset.name}",
+                match=f"{asset.release_title} {asset.tag} {asset.name}",
+                autocomplete=asset.name,
+            )
+        )
+    return results
 
 
 def main():
-    releases = GetReleases()
-    releases.get_releases()
-    if len(sys.argv) > 1 and sys.argv[1] == 'dicts':
-        releases.output_dicts()
-    else:
-        releases.output_full()
-    
+    mode = sys.argv[1] if len(sys.argv) > 1 else "menu"
+    query = sys.argv[2].strip().lower() if len(sys.argv) > 2 else ""
+    try:
+        if mode == "menu" and query == "status":
+            output(status_items())
+        elif mode == "menu":
+            output(menu_items())
+        elif mode == "all":
+            output(all_item())
+        elif mode == "deploy":
+            output(deploy_item())
+        elif mode in {"scheme", "dict", "model"}:
+            output(component_items(mode), cache_seconds=300)
+        elif mode == "dicts":
+            output(component_items("dict"), cache_seconds=300)
+        else:
+            output(menu_items())
+    except WanxiangError as exc:
+        output([error_item(str(exc))])
+
 
 if __name__ == "__main__":
     main()
