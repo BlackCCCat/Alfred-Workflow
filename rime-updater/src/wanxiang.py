@@ -75,6 +75,10 @@ def records_path() -> Path:
     return WORKFLOW_DIR / "cache" / "alfred_records.json"
 
 
+def copied_files_path() -> Path:
+    return WORKFLOW_DIR / "cache" / "copied_files.json"
+
+
 def exclude_file_path() -> Path:
     configured = (os.getenv("exclude_file_path") or "").strip()
     if configured:
@@ -96,6 +100,34 @@ def load_records() -> dict:
     if not isinstance(components, dict):
         data["components"] = {}
     return data
+
+
+def load_copied_files() -> dict:
+    path = copied_files_path()
+    if not path.exists():
+        return {"components": {}}
+    try:
+        data = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return {"components": {}}
+    if not isinstance(data, dict):
+        return {"components": {}}
+    components = data.get("components")
+    if not isinstance(components, dict):
+        data["components"] = {}
+    return data
+
+
+def save_copied_files(component: str, target_dir: Path, files: list[str]) -> None:
+    path = copied_files_path()
+    path.parent.mkdir(parents=True, exist_ok=True)
+    data = load_copied_files()
+    data.setdefault("components", {})[component] = {
+        "target_dir": str(target_dir),
+        "files": sorted(files),
+        "updated_at": datetime.now().strftime("%Y-%m-%dT%H:%M:%S"),
+    }
+    path.write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8")
 
 
 def _asset_record(asset: Asset) -> dict:
@@ -426,13 +458,73 @@ def backup_existing(target: Path, backup_dir: Path, relative_path: Path) -> bool
     return True
 
 
+def safe_existing_target(base_dir: Path, relative_path: str) -> Path:
+    target = (base_dir / relative_path).resolve()
+    base = base_dir.resolve()
+    if target != base and base in target.parents:
+        return target
+    raise WanxiangError(f"历史文件记录包含不安全路径：{relative_path}")
+
+
+def cleanup_previous_files(component: str, target_dir: Path, new_files: set[str], excludes: set[str], log=None) -> int:
+    record = load_copied_files().get("components", {}).get(component, {})
+    previous_files = set(record.get("files") or [])
+    if not previous_files:
+        if log:
+            log(f"没有找到{component_label(component)}的上次复制清单，跳过旧文件清理")
+        return 0
+
+    previous_target = record.get("target_dir")
+    if previous_target and Path(previous_target).expanduser().resolve() != target_dir.resolve():
+        if log:
+            log(f"{component_label(component)}历史目标目录变化，跳过旧目录清理：{previous_target}")
+        return 0
+
+    stale_files = previous_files - new_files
+    if log:
+        log(
+            f"检查{component_label(component)}旧文件："
+            f"上次 {len(previous_files)} 个，本次 {len(new_files)} 个，待清理 {len(stale_files)} 个"
+        )
+    if not stale_files:
+        if log:
+            log(f"{component_label(component)}没有需要删除的旧文件")
+        return 0
+
+    deleted = 0
+    deleted_parents = []
+    for relative_text in sorted(stale_files, reverse=True):
+        if should_skip(relative_text, excludes, component):
+            if log:
+                log(f"跳过排除文件，不删除：{relative_text}")
+            continue
+        target = safe_existing_target(target_dir, relative_text)
+        if target.exists() and target.is_file():
+            target.unlink()
+            deleted += 1
+            deleted_parents.append(target.parent)
+            if log:
+                log(f"已删除上次更新遗留文件：{relative_text}")
+
+    for parent in sorted(set(deleted_parents), key=lambda path: len(path.parts), reverse=True):
+        current = parent
+        while current != target_dir and target_dir.resolve() in current.resolve().parents:
+            try:
+                current.rmdir()
+            except OSError:
+                break
+            current = current.parent
+
+    if log:
+        log(f"{component_label(component)}旧文件清理完成，共删除 {deleted} 个文件")
+    return deleted
+
+
 def copy_tree(source_dir: Path, target_dir: Path, component: str, log=None) -> tuple[int, int]:
     target_dir.mkdir(parents=True, exist_ok=True)
     backup_dir = RimeConfig.backup_root() / datetime.now().strftime("%Y%m%d-%H%M%S") / component
     excludes = read_excludes() if component == "scheme" else set()
-    copied = 0
-    backed_up = 0
-
+    source_files = []
     for source in source_dir.rglob("*"):
         if source.is_dir():
             continue
@@ -440,6 +532,15 @@ def copy_tree(source_dir: Path, target_dir: Path, component: str, log=None) -> t
         relative_text = relative.as_posix()
         if should_skip(relative_text, excludes, component):
             continue
+        source_files.append((source, relative, relative_text))
+
+    new_file_set = {relative_text for _source, _relative, relative_text in source_files}
+    cleanup_previous_files(component, target_dir, new_file_set, excludes, log=log)
+
+    copied = 0
+    backed_up = 0
+
+    for source, relative, _relative_text in source_files:
         target = target_dir / relative
         target.parent.mkdir(parents=True, exist_ok=True)
         if backup_existing(target, backup_dir, relative):
@@ -449,6 +550,7 @@ def copy_tree(source_dir: Path, target_dir: Path, component: str, log=None) -> t
         if log and copied % 20 == 0:
             log(f"已复制 {component_label(component)}文件 {copied} 个")
 
+    save_copied_files(component, target_dir, list(new_file_set))
     return copied, backed_up
 
 
@@ -465,7 +567,9 @@ def install_asset(asset: Asset, log=None) -> str:
             backed_up = 1 if backup_existing(target, backup_dir, Path(MODEL_FILE)) else 0
             if log:
                 log(f"写入模型文件 {target}")
+            cleanup_previous_files("model", RimeConfig.setting_dir(), {MODEL_FILE}, set(), log=log)
             shutil.copy2(downloaded, target)
+            save_copied_files("model", RimeConfig.setting_dir(), [MODEL_FILE])
             save_record(asset)
             if log:
                 log(f"模型记录已更新：{asset.tag} / {asset.name}")
@@ -533,5 +637,8 @@ def status_text(include_records: bool = False) -> str:
         f"引擎：{RimeConfig.engine()}；目录：{RimeConfig.setting_dir()}"
     )
     if include_records:
-        text = f"{text}；记录文件：{records_path()}；排除文件：{exclude_file_path()}；{local_records_summary()}"
+        text = (
+            f"{text}；记录文件：{records_path()}；复制清单：{copied_files_path()}；"
+            f"排除文件：{exclude_file_path()}；{local_records_summary()}"
+        )
     return text

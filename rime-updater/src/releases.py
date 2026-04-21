@@ -5,6 +5,7 @@ from config import MODEL_FILE, RimeConfig
 from wanxiang import (
     WanxiangError,
     component_label,
+    copied_files_path,
     list_component_assets,
     load_records,
     exclude_file_path,
@@ -106,6 +107,13 @@ def status_items():
             subtitle=str(records_path()),
             arg="",
             uid="status-record-file",
+            valid=False,
+        ),
+        item(
+            title="上次复制文件清单",
+            subtitle=str(copied_files_path()),
+            arg="",
+            uid="status-copied-files",
             valid=False,
         ),
         item(

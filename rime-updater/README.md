@@ -27,7 +27,9 @@ Alfred Workflow，用于更新 Rime 万象方案、词库和语法模型。
 - `rimeall`：自动更新方案、词库、模型
 - `rimef`：手动触发重新部署
 
-更新前会把被覆盖的文件备份到 Rime 用户目录下的 `UpdateBackups/`。更新成功后会把本地记录写入 Workflow 目录下的 `cache/alfred_records.json`。
+更新前会把被覆盖的文件备份到 Rime 用户目录下的 `UpdateBackups/`。更新成功后会把本地记录写入 Workflow 目录下的 `cache/alfred_records.json`，并把本次实际复制的文件清单写入 `cache/copied_files.json`。
+
+下一次更新同一组件时，会先读取 `cache/copied_files.json`，只删除“上次复制过、这次不再复制、且不在排除列表中”的文件，避免旧版本残留，也避免误删用户排除文件。
 
 使用 `rimeall` 自动更新全部内容时，会先根据本地记录判断方案、词库和模型是否需要更新；只有存在更新时才下载并在完成后自动触发部署。单项更新会直接重新下载并刷新本地记录。
 
