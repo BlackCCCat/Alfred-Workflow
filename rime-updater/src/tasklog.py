@@ -48,7 +48,9 @@ def append_log(task_id: str, message: str) -> None:
     directory = task_dir(task_id)
     directory.mkdir(parents=True, exist_ok=True)
     with log_path(task_id).open("a", encoding="utf-8") as handle:
-        handle.write(f"[{now_text()}] {message}\n")
+        lines = str(message).splitlines() or [""]
+        for line in lines:
+            handle.write(f"[{now_text()}] {line}\n")
 
 
 def read_log(task_id: str) -> str:

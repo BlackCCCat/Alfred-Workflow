@@ -57,6 +57,25 @@ class Asset:
             return self.updated_at
 
 
+def _parse_sort_time(value: str) -> datetime:
+    if not value:
+        return datetime.min
+    cleaned = value.strip()
+    for parser in (
+        lambda text: datetime.strptime(text, "%Y-%m-%dT%H:%M:%SZ"),
+        lambda text: datetime.fromisoformat(text.replace("Z", "+00:00")),
+        lambda text: datetime.strptime(text, "%Y-%m-%d %H:%M:%S"),
+    ):
+        try:
+            parsed = parser(cleaned)
+            if parsed.tzinfo is not None:
+                return parsed.replace(tzinfo=None)
+            return parsed
+        except ValueError:
+            continue
+    return datetime.min
+
+
 def source_label() -> str:
     return "CNB" if RimeConfig.source() == "cnb" else "GitHub"
 
@@ -261,6 +280,10 @@ def _version_key(tag: str) -> tuple:
     return tuple(int(num) for num in nums) if nums else (0,)
 
 
+def _asset_sort_key(asset: Asset) -> tuple:
+    return (_parse_sort_time(asset.updated_at), _version_key(asset.tag), asset.tag, asset.name)
+
+
 def _is_scheme_release(release: dict) -> bool:
     tag = _release_tag(release)
     title = _release_title(release)
@@ -313,7 +336,7 @@ def _find_asset(releases: list[dict], component: str, asset_name: str, selected_
         for asset in release.get("assets", []):
             if asset.get("name") == asset_name:
                 candidates.append(_normalise_asset(component, release, asset))
-    return sorted(candidates, key=lambda item: _version_key(item.tag), reverse=True)
+    return sorted(candidates, key=_asset_sort_key, reverse=True)
 
 
 def list_component_assets(component: str, limit: int = 8) -> list[Asset]:

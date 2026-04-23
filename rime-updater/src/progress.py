@@ -57,6 +57,9 @@ def response_for(task_id, command):
         lines.append(f"- 错误：{state['error']}")
     if state.get("result"):
         lines.append(f"- 结果：{state['result']}")
+    notes = (state.get("scheme_notes") or "").strip()
+    if notes:
+        lines.extend(["", "## 更新说明", "", notes.strip()])
     lines.extend(["", "## 日志", "", "```text"])
     lines.append(log_text or "等待后台任务写入日志...")
     lines.append("```")
@@ -97,7 +100,7 @@ def main():
         },
     }
     if status in {"starting", "running"}:
-        payload["rerun"] = 1
+        payload["rerun"] = 0.1
     print(json.dumps(payload, ensure_ascii=False))
 
 

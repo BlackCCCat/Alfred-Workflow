@@ -443,7 +443,7 @@ python3 src/releases.py all</string>
 - `rimeall`：自动更新方案、词库、模型
 - `rimef`：手动触发重新部署
 
-默认下载源为 CNB，可在配置中切换为 GitHub。更新成功后会写入 Workflow 目录下的 `cache/alfred_records.json`，并把本次实际复制的文件清单写入 `cache/copied_files.json`。下一次更新同一组件时，会只删除“上次复制过、这次不再复制、且不在排除列表中”的文件。方案更新会尊重排除文件列表，默认位于 Workflow 目录下的 `cache/user_exclude_file.txt`，也可在配置中指定其他路径。使用 `rimeall` 自动更新全部内容时，会根据本地记录跳过无需更新的组件；存在更新时，完成后会自动触发部署。单项更新会直接重新下载并刷新本地记录。`rimew` 中选择“查看当前配置”会进入信息页。执行更新或部署时会打开 Text View 进度页并自动刷新日志。</string>
+默认下载源为 CNB，可在配置中切换为 GitHub。更新成功后会写入 Workflow 目录下的 `cache/alfred_records.json`，并把本次实际复制的文件清单写入 `cache/copied_files.json`。下一次更新同一组件时，会只删除“上次复制过、这次不再复制、且不在排除列表中”的文件。方案更新会尊重排除文件列表，默认位于 Workflow 目录下的 `cache/user_exclude_file.txt`，也可在配置中指定其他路径。使用 `rimeall` 自动更新全部内容时，会根据本地记录跳过无需更新的组件；存在更新时，完成后会自动触发部署。单项更新会直接重新下载并刷新本地记录。`rimew` 中选择“查看当前配置”会进入信息页。执行更新或部署时会打开 Text View 进度页并自动刷新日志。方案更新的更新说明会单独显示在 Text View 的“更新说明”部分。</string>
 	<key>uidata</key>
 	<dict>
 		<key>0E327277-A2C9-44D2-8DA4-D616B3957992</key>
