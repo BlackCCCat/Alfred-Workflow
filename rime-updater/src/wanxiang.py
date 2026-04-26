@@ -287,7 +287,7 @@ def _asset_sort_key(asset: Asset) -> tuple:
 def _is_scheme_release(release: dict) -> bool:
     tag = _release_tag(release)
     title = _release_title(release)
-    return re.fullmatch(r"v\d+\.\d+\.\d+", tag) is not None or "万象拼音输入方案" in title
+    return "万象拼音输入方案" in title and re.fullmatch(r"v\d+\.\d+\.\d+", tag) is not None
 
 
 def _is_dict_release(release: dict) -> bool:
