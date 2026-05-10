@@ -510,6 +510,10 @@ python3 src/releases.py all</string>
 						<string>squirrel</string>
 					</array>
 					<array>
+						<string>元书 Cobra</string>
+						<string>cobra</string>
+					</array>
+					<array>
 						<string>小企鹅 Fcitx5</string>
 						<string>fcitx5</string>
 					</array>

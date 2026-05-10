@@ -126,6 +126,8 @@ class RimeConfig:
         engine = cls.engine()
         if engine == "squirrel":
             return home / "Library" / "Rime"
+        if engine == "cobra":
+            return home / "Library" / "Application Support" / "com.ihsiao.inputmethod.Cobra" / "RimeUserData"
         if engine in {"fcitx", "fcitx5"}:
             return home / ".local" / "share" / "fcitx5" / "rime"
         return home / "Library" / "Rime"

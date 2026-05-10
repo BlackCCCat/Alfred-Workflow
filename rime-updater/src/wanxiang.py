@@ -118,6 +118,10 @@ def load_records() -> dict:
     components = data.get("components")
     if not isinstance(components, dict):
         data["components"] = {}
+        return data
+    for component, record in list(components.items()):
+        if isinstance(record, dict) and "current" not in record and "history" not in record:
+            components[component] = {"current": record, "history": []}
     return data
 
 
@@ -165,16 +169,37 @@ def _asset_record(asset: Asset) -> dict:
     }
 
 
+def current_record(component: str) -> dict:
+    component_data = load_records().get("components", {}).get(component, {})
+    if isinstance(component_data, dict):
+        current = component_data.get("current")
+        if isinstance(current, dict):
+            return current
+        if "tag" in component_data or "identity" in component_data:
+            return component_data
+    return {}
+
+
 def save_record(asset: Asset) -> None:
     path = records_path()
     path.parent.mkdir(parents=True, exist_ok=True)
     data = load_records()
-    data.setdefault("components", {})[asset.component] = _asset_record(asset)
+    components = data.setdefault("components", {})
+    component_data = components.get(asset.component, {})
+    if not isinstance(component_data, dict):
+        component_data = {}
+    history = component_data.get("history") if isinstance(component_data.get("history"), list) else []
+    current = component_data.get("current") if isinstance(component_data.get("current"), dict) else None
+    if current:
+        history = [current, *history]
+    component_data["current"] = _asset_record(asset)
+    component_data["history"] = history[:20]
+    components[asset.component] = component_data
     path.write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8")
 
 
 def asset_needs_update(asset: Asset) -> bool:
-    record = load_records().get("components", {}).get(asset.component)
+    record = current_record(asset.component)
     if not record:
         return True
 
@@ -197,7 +222,8 @@ def local_records_summary() -> str:
 
     lines = []
     for component in ("scheme", "dict", "model"):
-        record = components.get(component)
+        component_data = components.get(component, {})
+        record = current_record(component)
         if not record:
             lines.append(f"{component_label(component)}：暂无")
             continue
@@ -205,7 +231,10 @@ def local_records_summary() -> str:
         name = record.get("name") or "未知文件"
         updated_at = record.get("updated_at") or "未知时间"
         source = record.get("source_label") or record.get("source") or "未知源"
-        lines.append(f"{component_label(component)}：{tag} / {name} / {updated_at} / {source}")
+        history_count = 0
+        if isinstance(component_data, dict) and isinstance(component_data.get("history"), list):
+            history_count = len(component_data["history"])
+        lines.append(f"{component_label(component)}：{tag} / {name} / {updated_at} / {source} / 历史 {history_count} 条")
     return "本地记录：" + "；".join(lines)
 
 
@@ -614,6 +643,9 @@ def deploy_rime(log=None) -> str:
     if engine == "squirrel":
         executable = Path("/Library/Input Methods/Squirrel.app/Contents/MacOS/Squirrel")
         args = ["--reload"]
+    elif engine == "cobra":
+        executable = Path("/Library/Input Methods/Cobra.app/Contents/MacOS/Cobra")
+        args = ["deploy"]
     elif engine in {"fcitx", "fcitx5"}:
         executable = Path("/Library/Input Methods/Fcitx5.app/Contents/bin/fcitx5-curl")
         args = ["/config/addon/rime/deploy", "-X", "POST", "-d", "{}"]

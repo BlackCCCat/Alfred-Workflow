@@ -6,6 +6,7 @@ from wanxiang import (
     WanxiangError,
     component_label,
     copied_files_path,
+    current_record,
     list_component_assets,
     load_records,
     exclude_file_path,
@@ -126,7 +127,8 @@ def status_items():
     ]
 
     for component in ("scheme", "dict", "model"):
-        record = records.get(component)
+        component_data = records.get(component, {})
+        record = current_record(component)
         if not record:
             results.append(
                 item(
@@ -139,11 +141,15 @@ def status_items():
             )
             continue
         title = f"{component_label(component)}：{record.get('tag') or '未知版本'}"
+        history_count = 0
+        if isinstance(component_data, dict) and isinstance(component_data.get("history"), list):
+            history_count = len(component_data["history"])
         subtitle = (
             f"{record.get('name') or '未知文件'}；"
             f"{record.get('updated_at') or '未知更新时间'}；"
             f"{record.get('source_label') or record.get('source') or '未知源'}；"
-            f"{record.get('size') or 0} bytes"
+            f"{record.get('size') or 0} bytes；"
+            f"历史 {history_count} 条"
         )
         results.append(
             item(
