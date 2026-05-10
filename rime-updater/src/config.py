@@ -135,7 +135,3 @@ class RimeConfig:
     @classmethod
     def dict_dir(cls) -> Path:
         return cls.setting_dir() / "dicts"
-
-    @classmethod
-    def backup_root(cls) -> Path:
-        return cls.setting_dir() / "UpdateBackups"

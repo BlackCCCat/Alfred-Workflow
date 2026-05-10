@@ -501,21 +501,22 @@ def should_skip(relative_path: str, excludes: set[str], component: str) -> bool:
     return normalised in excludes
 
 
-def backup_existing(target: Path, backup_dir: Path, relative_path: Path) -> bool:
-    if not target.exists() or target.is_dir():
-        return False
-    backup_path = backup_dir / relative_path
-    backup_path.parent.mkdir(parents=True, exist_ok=True)
-    shutil.copy2(target, backup_path)
-    return True
-
-
 def safe_existing_target(base_dir: Path, relative_path: str) -> Path:
     target = (base_dir / relative_path).resolve()
     base = base_dir.resolve()
     if target != base and base in target.parents:
         return target
     raise WanxiangError(f"历史文件记录包含不安全路径：{relative_path}")
+
+
+def cleanup_backups(log=None) -> bool:
+    backup_root = RimeConfig.setting_dir() / "UpdateBackups"
+    if not backup_root.exists():
+        return False
+    if log:
+        log(f"删除旧备份目录：{backup_root}")
+    shutil.rmtree(backup_root)
+    return True
 
 
 def cleanup_previous_files(component: str, target_dir: Path, new_files: set[str], excludes: set[str], log=None) -> int:
@@ -574,7 +575,6 @@ def cleanup_previous_files(component: str, target_dir: Path, new_files: set[str]
 
 def copy_tree(source_dir: Path, target_dir: Path, component: str, log=None) -> tuple[int, int]:
     target_dir.mkdir(parents=True, exist_ok=True)
-    backup_dir = RimeConfig.backup_root() / datetime.now().strftime("%Y%m%d-%H%M%S") / component
     excludes = read_excludes() if component == "scheme" else set()
     source_files = []
     for source in source_dir.rglob("*"):
@@ -590,33 +590,29 @@ def copy_tree(source_dir: Path, target_dir: Path, component: str, log=None) -> t
     cleanup_previous_files(component, target_dir, new_file_set, excludes, log=log)
 
     copied = 0
-    backed_up = 0
 
     for source, relative, _relative_text in source_files:
         target = target_dir / relative
         target.parent.mkdir(parents=True, exist_ok=True)
-        if backup_existing(target, backup_dir, relative):
-            backed_up += 1
         shutil.copy2(source, target)
         copied += 1
         if log and copied % 20 == 0:
             log(f"已复制 {component_label(component)}文件 {copied} 个")
 
     save_copied_files(component, target_dir, list(new_file_set))
-    return copied, backed_up
+    return copied, 0
 
 
 def install_asset(asset: Asset, log=None) -> str:
     RimeConfig.setting_dir().mkdir(parents=True, exist_ok=True)
+    cleanup_backups(log=log)
     with tempfile.TemporaryDirectory(prefix="wanxiang-alfred-") as tmp:
         temp_dir = Path(tmp)
         downloaded = download_asset(asset, temp_dir, log=log)
 
         if asset.component == "model":
-            backup_dir = RimeConfig.backup_root() / datetime.now().strftime("%Y%m%d-%H%M%S") / "model"
             target = RimeConfig.setting_dir() / MODEL_FILE
             target.parent.mkdir(parents=True, exist_ok=True)
-            backed_up = 1 if backup_existing(target, backup_dir, Path(MODEL_FILE)) else 0
             if log:
                 log(f"写入模型文件 {target}")
             cleanup_previous_files("model", RimeConfig.setting_dir(), {MODEL_FILE}, set(), log=log)
@@ -625,17 +621,17 @@ def install_asset(asset: Asset, log=None) -> str:
             save_record(asset)
             if log:
                 log(f"模型记录已更新：{asset.tag} / {asset.name}")
-            return f"模型已更新：{asset.name}（备份 {backed_up} 个文件）"
+            return f"模型已更新：{asset.name}"
 
         extracted = extract_zip(downloaded, temp_dir, log=log)
         target_dir = RimeConfig.setting_dir() if asset.component == "scheme" else RimeConfig.dict_dir()
         if log:
             log(f"开始写入 {component_label(asset.component)} 到 {target_dir}")
-        copied, backed_up = copy_tree(extracted, target_dir, asset.component, log=log)
+        copied, _ignored = copy_tree(extracted, target_dir, asset.component, log=log)
         save_record(asset)
         if log:
             log(f"{component_label(asset.component)}记录已更新：{asset.tag} / {asset.name}")
-        return f"{component_label(asset.component)}已更新：{asset.name}（复制 {copied} 个文件，备份 {backed_up} 个文件）"
+        return f"{component_label(asset.component)}已更新：{asset.name}（复制 {copied} 个文件）"
 
 
 def deploy_rime(log=None) -> str:
