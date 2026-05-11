@@ -91,11 +91,19 @@ def component_label(component: str) -> str:
 
 
 def records_path() -> Path:
-    return WORKFLOW_DIR / "cache" / "alfred_records.json"
+    return RimeConfig.setting_dir() / "custom" / "update_records.json"
+
+
+def legacy_records_path() -> Path:
+    return RimeConfig.setting_dir() / "custom" / "alfred_records.json"
 
 
 def copied_files_path() -> Path:
-    return WORKFLOW_DIR / "cache" / "copied_files.json"
+    return WORKFLOW_DIR / "cache" / "alfred_copied_files.json"
+
+
+def copied_files_profile_key() -> str:
+    return "|".join([RimeConfig.engine(), RimeConfig.source(), RimeConfig.schema()])
 
 
 def exclude_file_path() -> Path:
@@ -107,6 +115,8 @@ def exclude_file_path() -> Path:
 
 def load_records() -> dict:
     path = records_path()
+    if not path.exists():
+        path = legacy_records_path()
     if not path.exists():
         return {"components": {}}
     try:
@@ -128,16 +138,20 @@ def load_records() -> dict:
 def load_copied_files() -> dict:
     path = copied_files_path()
     if not path.exists():
-        return {"components": {}}
+        return {"profiles": {}}
     try:
         data = json.loads(path.read_text(encoding="utf-8"))
     except (OSError, json.JSONDecodeError):
-        return {"components": {}}
+        return {"profiles": {}}
     if not isinstance(data, dict):
-        return {"components": {}}
-    components = data.get("components")
-    if not isinstance(components, dict):
-        data["components"] = {}
+        return {"profiles": {}}
+    profiles = data.get("profiles")
+    if not isinstance(profiles, dict):
+        old_components = data.get("components")
+        if isinstance(old_components, dict):
+            data = {"profiles": {copied_files_profile_key(): {"components": old_components}}}
+        else:
+            data["profiles"] = {}
     return data
 
 
@@ -145,11 +159,22 @@ def save_copied_files(component: str, target_dir: Path, files: list[str]) -> Non
     path = copied_files_path()
     path.parent.mkdir(parents=True, exist_ok=True)
     data = load_copied_files()
-    data.setdefault("components", {})[component] = {
+    profile_key = copied_files_profile_key()
+    profiles = data.setdefault("profiles", {})
+    profile = profiles.get(profile_key, {})
+    if not isinstance(profile, dict):
+        profile = {}
+    components = profile.get("components")
+    if not isinstance(components, dict):
+        components = {}
+    components[component] = {
         "target_dir": str(target_dir),
         "files": sorted(files),
         "updated_at": datetime.now().strftime("%Y-%m-%dT%H:%M:%S"),
     }
+    profile["components"] = components
+    profile["updated_at"] = datetime.now().strftime("%Y-%m-%dT%H:%M:%S")
+    profiles[profile_key] = profile
     path.write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8")
 
 
@@ -520,7 +545,13 @@ def cleanup_backups(log=None) -> bool:
 
 
 def cleanup_previous_files(component: str, target_dir: Path, new_files: set[str], excludes: set[str], log=None) -> int:
-    record = load_copied_files().get("components", {}).get(component, {})
+    record = (
+        load_copied_files()
+        .get("profiles", {})
+        .get(copied_files_profile_key(), {})
+        .get("components", {})
+        .get(component, {})
+    )
     previous_files = set(record.get("files") or [])
     if not previous_files:
         if log:
