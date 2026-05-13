@@ -27,8 +27,12 @@ Alfred Workflow，用于更新 Rime 万象方案、词库和语法模型。
 - `rimem`：更新语法模型
 - `rimeall`：自动更新方案、词库、模型
 - `rimef`：手动触发重新部署
+- `rimee`：切换当前使用的输入法引擎
+- `rimew -> 切换输入法`：直接打开引擎选择列表
 
 更新成功后会把方案更新记录写入当前输入法用户目录下的 `custom/update_records.json`，并把本次实际复制的文件清单写入 Workflow 目录下的 `cache/alfred_copied_files.json`。`update_records.json` 会保留历史记录：当前版本放在 `current`，旧版本追加到 `history`，不会只覆盖成最后一条。
+
+主菜单里的“切换输入法”会直接打开引擎选择列表，选完后会把当前引擎写入 Workflow 目录下的运行时状态文件；后续所有更新都会使用该引擎对应的输入法目录与记录文件。你也可以恢复到 Workflow 配置里的默认输入法。
 
 下一次更新同一组件时，会先读取 Workflow 目录下的 `cache/alfred_copied_files.json`，按当前输入法、下载源和方案类型分开处理，只删除“上次复制过、这次不再复制、且不在排除列表中”的文件，避免旧版本残留，也避免误删用户排除文件。
 
@@ -36,9 +40,9 @@ Alfred Workflow，用于更新 Rime 万象方案、词库和语法模型。
 
 在 `rimew` 中选择“查看当前配置”会进入信息页，显示当前配置和本地记录。
 
-执行更新或部署时会打开 Text View 进度页。实际任务在后台执行，日志写入 `cache/tasks/`，Text View 会自动刷新显示下载、解压、复制和部署进度。
+执行 `rimes`、`rimed`、`rimem` 和 `rimeall` 时会打开 Text View 进度页。实际任务在后台执行，日志写入 `cache/tasks/`，Text View 会自动刷新显示下载、解压、复制和部署进度。
 
-方案更新时，更新说明会单独显示在 Text View 的“更新说明”部分，不会混进日志区。
+方案更新时，更新说明会单独显示在 Text View 的“更新说明”部分，不会混进日志区。`rimee` 切换输入法和 `rimef` 手动部署会直接用通知提示结果。
 
 方案更新会尊重排除文件列表。如果配置项留空，会使用 Workflow 目录下的 `cache/user_exclude_file.txt`；如果文件不存在，会自动创建一个默认排除列表。排除列表每行一个相对 Rime 用户目录的路径，`#` 开头为注释。
 

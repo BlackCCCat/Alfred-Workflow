@@ -11,6 +11,18 @@ from wanxiang import (
     parse_command,
     status_text,
 )
+from config import RimeConfig, clear_runtime_engine, set_runtime_engine, ENGINE_LABELS
+
+
+def switch_engine(tag: str) -> str:
+    engine = (tag or "").strip().lower()
+    if engine == "default":
+        clear_runtime_engine()
+        return f"已恢复使用 Workflow 配置的输入法：{ENGINE_LABELS.get(RimeConfig.engine(), RimeConfig.engine())}"
+    if engine not in ENGINE_LABELS:
+        raise WanxiangError(f"未知输入法引擎：{engine}")
+    set_runtime_engine(engine)
+    return f"已切换输入法：{ENGINE_LABELS[engine]}"
 
 
 def update_component(component, tag="", name="", force=True, log=None, state_writer=None):
@@ -54,6 +66,8 @@ def scheme_release_notes(asset):
 
 def run(command, log=None, state_writer=None):
     component, tag, name = parse_command(command)
+    if component == "engine":
+        return [switch_engine(tag)], None
     if component == "status":
         return [status_text(include_records=True)], None
 

@@ -1,7 +1,7 @@
 import sys
 
 from alfred import error_item, item, output
-from config import MODEL_FILE, RimeConfig
+from config import ENGINE_LABELS, MODEL_FILE, RimeConfig
 from wanxiang import (
     WanxiangError,
     component_label,
@@ -49,16 +49,23 @@ def menu_items():
         item(
             title="查看当前配置",
             subtitle="进入本地配置和更新记录页面",
-            arg="",
+            arg="status",
             uid="menu-status",
-            valid=False,
-            autocomplete="status",
+            valid=True,
+        ),
+        item(
+            title="切换输入法",
+            subtitle=f"当前：{ENGINE_LABELS.get(RimeConfig.engine(), RimeConfig.engine())}",
+            arg="engine",
+            uid="menu-engine",
+            valid=True,
         ),
         item(
             title="重新部署",
             subtitle="触发当前输入法引擎重新部署 RIME",
             arg="deploy",
             uid="menu-deploy",
+            valid=True,
         ),
     ]
 
@@ -83,6 +90,30 @@ def deploy_item():
             uid="deploy-rime",
         )
     ]
+
+
+def engine_items():
+    current = RimeConfig.engine()
+    results = [
+        item(
+            title="恢复 Workflow 配置",
+            subtitle=f"当前：{ENGINE_LABELS.get(current, current)}",
+            arg="engine@default",
+            uid="engine-default",
+        )
+    ]
+    for engine, label in ENGINE_LABELS.items():
+        suffix = "（当前）" if engine == current else ""
+        results.append(
+            item(
+                title=f"{label}{suffix}",
+                subtitle=f"切换到 {label}",
+                arg=f"engine@{engine}",
+                uid=f"engine-{engine}",
+                autocomplete=label,
+            )
+        )
+    return results
 
 
 def status_items():
@@ -192,6 +223,8 @@ def main():
             output(status_items())
         elif mode == "menu":
             output(menu_items())
+        elif mode == "engine":
+            output(engine_items())
         elif mode == "all":
             output(all_item())
         elif mode == "deploy":

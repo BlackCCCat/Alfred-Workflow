@@ -47,11 +47,99 @@
 				<false/>
 			</dict>
 		</array>
+		<key>47F73D68-0B13-4926-A38D-3ECA4868FACF</key>
+		<array>
+			<dict>
+				<key>destinationuid</key>
+				<string>50B3845E-E419-4014-BBB5-32C5A16614E2</string>
+				<key>modifiers</key>
+				<integer>0</integer>
+				<key>modifiersubtext</key>
+				<string></string>
+				<key>vitoclose</key>
+				<false/>
+			</dict>
+		</array>
+		<key>924D55FF-EA35-4206-B79E-F51E02628ECD</key>
+		<array>
+			<dict>
+				<key>destinationuid</key>
+				<string>7471F67A-D6E5-478A-AB1F-FB671A9E61FC</string>
+				<key>modifiers</key>
+				<integer>0</integer>
+				<key>modifiersubtext</key>
+				<string></string>
+				<key>sourceoutputuid</key>
+				<string>37CDE8AA-470B-41B4-A01D-45A695101D08</string>
+				<key>vitoclose</key>
+				<false/>
+			</dict>
+			<dict>
+				<key>destinationuid</key>
+				<string>5759846C-D8C5-4111-95C7-2E48577ADB59</string>
+				<key>modifiers</key>
+				<integer>0</integer>
+				<key>modifiersubtext</key>
+				<string></string>
+				<key>sourceoutputuid</key>
+				<string>572B776D-CE8D-4407-9060-815F8102F277</string>
+				<key>vitoclose</key>
+				<false/>
+			</dict>
+			<dict>
+				<key>destinationuid</key>
+				<string>4D39646E-EF00-4381-AEEA-E40600650D84</string>
+				<key>modifiers</key>
+				<integer>0</integer>
+				<key>modifiersubtext</key>
+				<string></string>
+				<key>sourceoutputuid</key>
+				<string>A7DD7DD5-5CC6-4B9A-9759-4DA045356057</string>
+				<key>vitoclose</key>
+				<false/>
+			</dict>
+			<dict>
+				<key>destinationuid</key>
+				<string>9AFD8745-7E5C-43E4-91AE-6F0AC3C75B2B</string>
+				<key>modifiers</key>
+				<integer>0</integer>
+				<key>modifiersubtext</key>
+				<string></string>
+				<key>vitoclose</key>
+				<false/>
+			</dict>
+		</array>
+		<key>46A2A938-4033-4A84-8182-B2124AA83EDC</key>
+		<array>
+			<dict>
+				<key>destinationuid</key>
+				<string>50B3845E-E419-4014-BBB5-32C5A16614E2</string>
+				<key>modifiers</key>
+				<integer>0</integer>
+				<key>modifiersubtext</key>
+				<string></string>
+				<key>vitoclose</key>
+				<false/>
+			</dict>
+		</array>
+		<key>50B3845E-E419-4014-BBB5-32C5A16614E2</key>
+		<array>
+			<dict>
+				<key>destinationuid</key>
+				<string>7D8F76CC-BE60-4D4A-A4FD-794796A9B209</string>
+				<key>modifiers</key>
+				<integer>0</integer>
+				<key>modifiersubtext</key>
+				<string></string>
+				<key>vitoclose</key>
+				<false/>
+			</dict>
+		</array>
 		<key>BFC7819D-AB52-4209-B3BC-BFC5FB4C88D0</key>
 		<array>
 			<dict>
 				<key>destinationuid</key>
-				<string>9AFD8745-7E5C-43E4-91AE-6F0AC3C75B2B</string>
+				<string>50B3845E-E419-4014-BBB5-32C5A16614E2</string>
 				<key>modifiers</key>
 				<integer>0</integer>
 				<key>modifiersubtext</key>
@@ -77,7 +165,7 @@
 		<array>
 			<dict>
 				<key>destinationuid</key>
-				<string>9AFD8745-7E5C-43E4-91AE-6F0AC3C75B2B</string>
+				<string>924D55FF-EA35-4206-B79E-F51E02628ECD</string>
 				<key>modifiers</key>
 				<integer>0</integer>
 				<key>modifiersubtext</key>
@@ -139,6 +227,11 @@ python3 src/releases.py menu "$1"</string>
 				<integer>5</integer>
 				<key>withspace</key>
 				<true/>
+			</dict>
+			<key>inboundconfig</key>
+			<dict>
+				<key>externalid</key>
+				<string>menu-main</string>
 			</dict>
 			<key>type</key>
 			<string>alfred.workflow.input.scriptfilter</string>
@@ -400,6 +493,61 @@ python3 src/releases.py all</string>
 		<dict>
 			<key>config</key>
 			<dict>
+				<key>alfredfiltersresults</key>
+				<true/>
+				<key>alfredfiltersresultsmatchmode</key>
+				<integer>0</integer>
+				<key>argumenttreatemptyqueryasnil</key>
+				<true/>
+				<key>argumenttrimmode</key>
+				<integer>0</integer>
+				<key>argumenttype</key>
+				<integer>1</integer>
+				<key>escaping</key>
+				<integer>102</integer>
+				<key>keyword</key>
+				<string>rimee</string>
+				<key>queuedelaycustom</key>
+				<integer>3</integer>
+				<key>queuedelayimmediatelyinitially</key>
+				<true/>
+				<key>queuedelaymode</key>
+				<integer>0</integer>
+				<key>queuemode</key>
+				<integer>1</integer>
+				<key>runningsubtext</key>
+				<string>获取输入法引擎中...</string>
+				<key>script</key>
+				<string>export PATH="/usr/bin:/bin:/usr/sbin:/sbin:$HOME/.pyenv/shims:$HOME/.pyenv/bin:$PATH"
+python3 src/releases.py engine</string>
+				<key>scriptargtype</key>
+				<integer>1</integer>
+				<key>scriptfile</key>
+				<string></string>
+				<key>subtext</key>
+				<string>选择并切换输入法引擎</string>
+				<key>title</key>
+				<string>切换输入法引擎</string>
+				<key>type</key>
+				<integer>5</integer>
+				<key>withspace</key>
+				<true/>
+			</dict>
+			<key>inboundconfig</key>
+			<dict>
+				<key>externalid</key>
+				<string>switch-engine</string>
+			</dict>
+			<key>type</key>
+			<string>alfred.workflow.input.scriptfilter</string>
+			<key>uid</key>
+			<string>47F73D68-0B13-4926-A38D-3ECA4868FACF</string>
+			<key>version</key>
+			<integer>3</integer>
+		</dict>
+		<dict>
+			<key>config</key>
+			<dict>
 				<key>behaviour</key>
 				<integer>2</integer>
 				<key>fontmode</key>
@@ -430,6 +578,183 @@ python3 src/releases.py all</string>
 			<key>version</key>
 			<integer>1</integer>
 		</dict>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>concurrently</key>
+				<false/>
+				<key>escaping</key>
+				<integer>102</integer>
+				<key>script</key>
+				<string>export PATH="/usr/bin:/bin:/usr/sbin:/sbin:$HOME/.pyenv/shims:$HOME/.pyenv/bin:$PATH"
+python3 src/main.py "$1"</string>
+				<key>scriptargtype</key>
+				<integer>1</integer>
+				<key>scriptfile</key>
+				<string></string>
+				<key>type</key>
+				<integer>0</integer>
+			</dict>
+			<key>type</key>
+			<string>alfred.workflow.action.script</string>
+			<key>uid</key>
+			<string>50B3845E-E419-4014-BBB5-32C5A16614E2</string>
+			<key>version</key>
+			<integer>2</integer>
+		</dict>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>lastpathcomponent</key>
+				<false/>
+				<key>onlyshowifquerypopulated</key>
+				<true/>
+				<key>removeextension</key>
+				<false/>
+				<key>text</key>
+				<string>{query}</string>
+				<key>title</key>
+				<string>万象 Rime</string>
+			</dict>
+			<key>type</key>
+			<string>alfred.workflow.output.notification</string>
+			<key>uid</key>
+			<string>7D8F76CC-BE60-4D4A-A4FD-794796A9B209</string>
+			<key>version</key>
+			<integer>1</integer>
+		</dict>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>conditions</key>
+				<array>
+					<dict>
+						<key>inputstring</key>
+						<string>{query}</string>
+						<key>matchcasesensitive</key>
+						<false/>
+						<key>matchmode</key>
+						<integer>0</integer>
+						<key>matchstring</key>
+						<string>status</string>
+						<key>outputlabel</key>
+						<string>status</string>
+						<key>uid</key>
+						<string>37CDE8AA-470B-41B4-A01D-45A695101D08</string>
+					</dict>
+					<dict>
+						<key>inputstring</key>
+						<string>{query}</string>
+						<key>matchcasesensitive</key>
+						<false/>
+						<key>matchmode</key>
+						<integer>0</integer>
+						<key>matchstring</key>
+						<string>engine</string>
+						<key>outputlabel</key>
+						<string>engine</string>
+						<key>uid</key>
+						<string>572B776D-CE8D-4407-9060-815F8102F277</string>
+					</dict>
+					<dict>
+						<key>inputstring</key>
+						<string>{query}</string>
+						<key>matchcasesensitive</key>
+						<false/>
+						<key>matchmode</key>
+						<integer>0</integer>
+						<key>matchstring</key>
+						<string>deploy</string>
+						<key>outputlabel</key>
+						<string>deploy</string>
+						<key>uid</key>
+						<string>A7DD7DD5-5CC6-4B9A-9759-4DA045356057</string>
+					</dict>
+				</array>
+				<key>elselabel</key>
+				<string>update</string>
+				<key>hideelse</key>
+				<false/>
+			</dict>
+			<key>type</key>
+			<string>alfred.workflow.utility.conditional</string>
+			<key>uid</key>
+			<string>924D55FF-EA35-4206-B79E-F51E02628ECD</string>
+			<key>version</key>
+			<integer>1</integer>
+		</dict>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>externaltriggerid</key>
+				<string>menu-main</string>
+				<key>passinputasargument</key>
+				<true/>
+				<key>passvariables</key>
+				<true/>
+				<key>workflowbundleid</key>
+				<string>self</string>
+			</dict>
+			<key>type</key>
+			<string>alfred.workflow.output.callexternaltrigger</string>
+			<key>uid</key>
+			<string>7471F67A-D6E5-478A-AB1F-FB671A9E61FC</string>
+			<key>version</key>
+			<integer>1</integer>
+		</dict>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>externaltriggerid</key>
+				<string>switch-engine</string>
+				<key>passinputasargument</key>
+				<false/>
+				<key>passvariables</key>
+				<true/>
+				<key>workflowbundleid</key>
+				<string>self</string>
+			</dict>
+			<key>type</key>
+			<string>alfred.workflow.output.callexternaltrigger</string>
+			<key>uid</key>
+			<string>5759846C-D8C5-4111-95C7-2E48577ADB59</string>
+			<key>version</key>
+			<integer>1</integer>
+		</dict>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>externaltriggerid</key>
+				<string>deploy-now</string>
+				<key>passinputasargument</key>
+				<true/>
+				<key>passvariables</key>
+				<true/>
+				<key>workflowbundleid</key>
+				<string>self</string>
+			</dict>
+			<key>type</key>
+			<string>alfred.workflow.output.callexternaltrigger</string>
+			<key>uid</key>
+			<string>4D39646E-EF00-4381-AEEA-E40600650D84</string>
+			<key>version</key>
+			<integer>1</integer>
+		</dict>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>availableviaurlhandler</key>
+				<false/>
+				<key>triggerid</key>
+				<string>deploy-now</string>
+			</dict>
+			<key>type</key>
+			<string>alfred.workflow.trigger.external</string>
+			<key>uid</key>
+			<string>46A2A938-4033-4A84-8182-B2124AA83EDC</string>
+			<key>version</key>
+			<integer>1</integer>
+		</dict>
 	</array>
 	<key>readme</key>
 	<string># 万象 Rime 更新
@@ -442,8 +767,9 @@ python3 src/releases.py all</string>
 - `rimem`：更新语法模型
 - `rimeall`：自动更新方案、词库、模型
 - `rimef`：手动触发重新部署
+- `rimee`：切换当前使用的输入法引擎
 
-默认下载源为 CNB，可在配置中切换为 GitHub。方案更新记录会写入当前输入法用户目录下的 `custom/update_records.json`，本次实际复制的文件清单会写入 Workflow 目录下的 `cache/alfred_copied_files.json`，并按输入法、下载源和方案类型隔离。下一次更新同一组件时，会只删除“上次复制过、这次不再复制、且不在排除列表中”的文件。方案更新会尊重排除文件列表，默认位于 Workflow 目录下的 `cache/user_exclude_file.txt`，也可在配置中指定其他路径。使用 `rimeall` 自动更新全部内容时，会根据本地记录跳过无需更新的组件；存在更新时，完成后会自动触发部署。单项更新会直接重新下载并刷新本地记录。`rimew` 中选择“查看当前配置”会进入信息页。执行更新或部署时会打开 Text View 进度页并自动刷新日志。方案更新的更新说明会单独显示在 Text View 的“更新说明”部分。</string>
+默认下载源为 CNB，可在配置中切换为 GitHub。主菜单支持在 Workflow 内直接切换输入法引擎，切换结果会写入 Workflow 目录下的运行时状态文件。方案更新记录会写入当前输入法用户目录下的 `custom/update_records.json`，本次实际复制的文件清单会写入 Workflow 目录下的 `cache/alfred_copied_files.json`，并按输入法、下载源和方案类型隔离。下一次更新同一组件时，会只删除“上次复制过、这次不再复制、且不在排除列表中”的文件。方案更新会尊重排除文件列表，默认位于 Workflow 目录下的 `cache/user_exclude_file.txt`，也可在配置中指定其他路径。使用 `rimeall` 自动更新全部内容时，会根据本地记录跳过无需更新的组件；存在更新时，完成后会自动触发部署。单项更新会直接重新下载并刷新本地记录。`rimew` 中选择“查看当前配置”会进入信息页，选择“切换输入法引擎”会直接打开引擎列表。执行 `rimes`、`rimed`、`rimem` 和 `rimeall` 时会打开 Text View 进度页并自动刷新日志。方案更新的更新说明会单独显示在 Text View 的“更新说明”部分。`rimee` 切换输入法和 `rimef` 手动部署会直接用通知提示结果。</string>
 	<key>uidata</key>
 	<dict>
 		<key>0E327277-A2C9-44D2-8DA4-D616B3957992</key>
@@ -466,6 +792,13 @@ python3 src/releases.py all</string>
 			<real>70.0</real>
 			<key>ypos</key>
 			<real>340.0</real>
+		</dict>
+		<key>47F73D68-0B13-4926-A38D-3ECA4868FACF</key>
+		<dict>
+			<key>xpos</key>
+			<real>70.0</real>
+			<key>ypos</key>
+			<real>700.0</real>
 		</dict>
 		<key>BFC7819D-AB52-4209-B3BC-BFC5FB4C88D0</key>
 		<dict>
@@ -494,6 +827,41 @@ python3 src/releases.py all</string>
 			<real>410.0</real>
 			<key>ypos</key>
 			<real>410.0</real>
+		</dict>
+		<key>50B3845E-E419-4014-BBB5-32C5A16614E2</key>
+		<dict>
+			<key>xpos</key>
+			<real>410.0</real>
+			<key>ypos</key>
+			<real>700.0</real>
+		</dict>
+		<key>7471F67A-D6E5-478A-AB1F-FB671A9E61FC</key>
+		<dict>
+			<key>xpos</key>
+			<real>410.0</real>
+			<key>ypos</key>
+			<real>610.0</real>
+		</dict>
+		<key>5759846C-D8C5-4111-95C7-2E48577ADB59</key>
+		<dict>
+			<key>xpos</key>
+			<real>410.0</real>
+			<key>ypos</key>
+			<real>700.0</real>
+		</dict>
+		<key>4D39646E-EF00-4381-AEEA-E40600650D84</key>
+		<dict>
+			<key>xpos</key>
+			<real>410.0</real>
+			<key>ypos</key>
+			<real>790.0</real>
+		</dict>
+		<key>7D8F76CC-BE60-4D4A-A4FD-794796A9B209</key>
+		<dict>
+			<key>xpos</key>
+			<real>700.0</real>
+			<key>ypos</key>
+			<real>700.0</real>
 		</dict>
 	</dict>
 	<key>userconfigurationconfig</key>

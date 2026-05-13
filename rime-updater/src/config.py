@@ -1,4 +1,6 @@
+import json
 import os
+from datetime import datetime
 from pathlib import Path
 
 
@@ -8,6 +10,8 @@ CNB_REPO = "rime-wanxiang"
 MODEL_REPO = "RIME-LMDG"
 MODEL_TAG = "LTS"
 MODEL_FILE = "wanxiang-lts-zh-hans.gram"
+WORKFLOW_DIR = Path(__file__).resolve().parent.parent
+RUNTIME_SETTINGS_FILE = WORKFLOW_DIR / "cache" / "runtime_settings.json"
 
 GITHUB_RELEASES_API = f"https://api.github.com/repos/{OWNER}/{GITHUB_REPO}/releases"
 GITHUB_MODEL_API = f"https://api.github.com/repos/{OWNER}/{MODEL_REPO}/releases/tags/{MODEL_TAG}"
@@ -42,6 +46,12 @@ SCHEMA_LABELS = {
     "wubi": "五笔辅助码",
     "hanxin": "汉心辅助码",
     "shouyou": "首右辅助码",
+}
+
+ENGINE_LABELS = {
+    "squirrel": "鼠须管 Squirrel",
+    "cobra": "元书 Cobra",
+    "fcitx5": "小企鹅 Fcitx5",
 }
 
 SCHEME_ASSETS = {
@@ -91,7 +101,16 @@ SCHEME_SKIP_FILES = {
 
 class RimeConfig:
     @classmethod
+    def runtime_engine(cls) -> str:
+        data = load_runtime_settings()
+        engine = (data.get("engine") or "").strip().lower()
+        return engine if engine in ENGINE_LABELS else ""
+
+    @classmethod
     def engine(cls) -> str:
+        runtime_engine = cls.runtime_engine()
+        if runtime_engine:
+            return runtime_engine
         return (os.getenv("rime_engine") or "squirrel").strip().lower()
 
     @classmethod
@@ -135,3 +154,38 @@ class RimeConfig:
     @classmethod
     def dict_dir(cls) -> Path:
         return cls.setting_dir() / "dicts"
+
+
+def load_runtime_settings() -> dict:
+    path = RUNTIME_SETTINGS_FILE
+    if not path.exists():
+        return {}
+    try:
+        data = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return {}
+    return data if isinstance(data, dict) else {}
+
+
+def set_runtime_engine(engine: str) -> None:
+    engine = (engine or "").strip().lower()
+    if engine not in ENGINE_LABELS:
+        raise ValueError(f"无效的输入法引擎：{engine}")
+    RUNTIME_SETTINGS_FILE.parent.mkdir(parents=True, exist_ok=True)
+    RUNTIME_SETTINGS_FILE.write_text(
+        json.dumps(
+            {
+                "engine": engine,
+                "updated_at": datetime.now().strftime("%Y-%m-%dT%H:%M:%S"),
+            },
+            ensure_ascii=False,
+            indent=2,
+        ),
+        encoding="utf-8",
+    )
+
+
+def clear_runtime_engine() -> None:
+    path = RUNTIME_SETTINGS_FILE
+    if path.exists():
+        path.unlink()
