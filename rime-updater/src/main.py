@@ -11,7 +11,7 @@ from wanxiang import (
     parse_command,
     status_text,
 )
-from config import RimeConfig, clear_runtime_engine, set_runtime_engine, ENGINE_LABELS
+from config import RimeConfig, clear_runtime_engine, set_runtime_engine, ENGINE_LABELS, REQUEST_TIMEOUT
 
 
 def switch_engine(tag: str) -> str:
@@ -28,6 +28,7 @@ def switch_engine(tag: str) -> str:
 def update_component(component, tag="", name="", force=True, log=None, state_writer=None):
     if log:
         log(f"检查远端{component_label(component)}资源")
+        log(f"请求远端 release 列表，源：{RimeConfig.source()}，超时：{REQUEST_TIMEOUT} 秒")
     asset = latest_asset(component, selected_tag=tag, selected_name=name)
     if log:
         log(f"远端{component_label(component)}资源：{asset.tag} / {asset.name}")
@@ -115,6 +116,7 @@ def run_task(task_id, command):
 
     def log(message):
         append_log(task_id, message)
+        write_state(task_id, status="running", command=command)
 
     def update_state(**updates):
         write_state(task_id, **updates)
@@ -124,6 +126,10 @@ def run_task(task_id, command):
     except WanxiangError as exc:
         append_log(task_id, f"任务失败：{exc}")
         write_state(task_id, status="failed", command=command, error=str(exc))
+        return 1
+    except Exception as exc:
+        append_log(task_id, f"任务异常：{type(exc).__name__}: {exc}")
+        write_state(task_id, status="failed", command=command, error=f"{type(exc).__name__}: {exc}")
         return 1
 
     if scheme_notes:

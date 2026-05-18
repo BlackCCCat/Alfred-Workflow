@@ -12,6 +12,7 @@ from tasklog import state_path
 
 
 WORKFLOW_DIR = Path(__file__).resolve().parent.parent
+RUNNING_TASK_STALE_SECONDS = 10 * 60
 
 
 def command_from_argv():
@@ -34,6 +35,15 @@ def start_task(command):
         start_new_session=True,
     )
     return task_id
+
+
+def is_running_task_fresh(task_id):
+    if not task_id:
+        return False
+    try:
+        return time.time() - state_path(task_id).stat().st_mtime < RUNNING_TASK_STALE_SECONDS
+    except OSError:
+        return False
 
 
 def response_for(task_id, command):
@@ -73,11 +83,17 @@ def main():
         print(json.dumps({"response": "没有收到更新命令。", "footer": "关闭窗口后重试。"}, ensure_ascii=False))
         return
 
+    if task_id:
+        current_state = read_state(task_id)
+        if current_state.get("status") in {"starting", "running"} and not is_running_task_fresh(task_id):
+            task_id = ""
+
     if not task_id:
         latest_task_id = read_latest_task(command)
         latest_state = read_state(latest_task_id) if latest_task_id else {}
         if latest_state.get("status") in {"starting", "running"}:
-            task_id = latest_task_id
+            if is_running_task_fresh(latest_task_id):
+                task_id = latest_task_id
         elif latest_state.get("status") in {"completed", "failed"}:
             try:
                 fresh = time.time() - state_path(latest_task_id).stat().st_mtime < 15
@@ -100,7 +116,7 @@ def main():
         },
     }
     if status in {"starting", "running"}:
-        payload["rerun"] = 0.1
+        payload["rerun"] = 1
     print(json.dumps(payload, ensure_ascii=False))
 
 

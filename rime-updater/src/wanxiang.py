@@ -2,12 +2,16 @@ import json
 import os
 import re
 import shutil
+import signal
+import socket
 import subprocess
 import tempfile
+import threading
 import urllib.error
 import urllib.parse
 import urllib.request
 import zipfile
+from contextlib import contextmanager
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
@@ -32,6 +36,29 @@ WORKFLOW_DIR = Path(__file__).resolve().parent.parent
 
 class WanxiangError(Exception):
     pass
+
+
+socket.setdefaulttimeout(REQUEST_TIMEOUT)
+
+
+@contextmanager
+def request_deadline(url: str):
+    if threading.current_thread() is not threading.main_thread() or not hasattr(signal, "SIGALRM"):
+        yield
+        return
+
+    previous_handler = signal.getsignal(signal.SIGALRM)
+
+    def timeout_handler(_signum, _frame):
+        raise TimeoutError(f"请求超时：{url} 超过 {REQUEST_TIMEOUT} 秒")
+
+    signal.signal(signal.SIGALRM, timeout_handler)
+    signal.setitimer(signal.ITIMER_REAL, REQUEST_TIMEOUT)
+    try:
+        yield
+    finally:
+        signal.setitimer(signal.ITIMER_REAL, 0)
+        signal.signal(signal.SIGALRM, previous_handler)
 
 
 @dataclass(frozen=True)
@@ -269,11 +296,14 @@ def request_json(url: str, source: Optional[str] = None, params: Optional[dict] 
         url = f"{url}?{urllib.parse.urlencode(params)}"
     request = urllib.request.Request(url, headers=headers)
     try:
-        with urllib.request.urlopen(request, timeout=REQUEST_TIMEOUT) as response:
-            body = response.read().decode("utf-8")
-            return json.loads(body), response.headers
+        with request_deadline(url):
+            with urllib.request.urlopen(request, timeout=REQUEST_TIMEOUT) as response:
+                body = response.read().decode("utf-8")
+                return json.loads(body), response.headers
     except urllib.error.HTTPError as exc:
         raise WanxiangError(f"请求失败：HTTP {exc.code} {url}") from exc
+    except (TimeoutError, socket.timeout) as exc:
+        raise WanxiangError(str(exc)) from exc
     except urllib.error.URLError as exc:
         raise WanxiangError(f"请求失败：{exc.reason}") from exc
     except json.JSONDecodeError as exc:
