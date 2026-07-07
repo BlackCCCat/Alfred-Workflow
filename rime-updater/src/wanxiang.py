@@ -259,7 +259,7 @@ def asset_needs_update(asset: Asset) -> bool:
     keys = ["source", "tag", "name", "identity"]
     if asset.component in {"scheme", "dict"}:
         keys.append("schema")
-    if not record.get("identity"):
+    if asset.component == "model" or not record.get("identity"):
         keys.extend(["updated_at", "size"])
     for key in keys:
         if record.get(key) != expected.get(key):
