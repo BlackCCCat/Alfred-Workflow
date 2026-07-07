@@ -1,5 +1,6 @@
 import json
 import hashlib
+import shutil
 from datetime import datetime
 from pathlib import Path
 
@@ -38,6 +39,31 @@ def read_latest_task(command: str) -> str:
 def write_latest_task(command: str, task_id: str) -> None:
     TASKS_DIR.mkdir(parents=True, exist_ok=True)
     latest_path(command).write_text(task_id, encoding="utf-8")
+
+
+def cleanup_old_tasks(keep_task_id: str) -> None:
+    if not TASKS_DIR.exists():
+        return
+    for path in TASKS_DIR.iterdir():
+        if path.name.startswith("latest-"):
+            continue
+        if path.name == keep_task_id:
+            continue
+        try:
+            if path.is_dir():
+                shutil.rmtree(path)
+            else:
+                path.unlink()
+        except OSError:
+            continue
+    for path in TASKS_DIR.glob("latest-*.txt"):
+        try:
+            linked_task = path.read_text(encoding="utf-8").strip()
+        except OSError:
+            path.unlink(missing_ok=True)
+            continue
+        if linked_task != keep_task_id:
+            path.unlink(missing_ok=True)
 
 
 def now_text() -> str:

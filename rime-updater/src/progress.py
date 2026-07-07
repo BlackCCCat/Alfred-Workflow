@@ -7,7 +7,7 @@ import time
 import uuid
 from pathlib import Path
 
-from tasklog import append_log, read_latest_task, read_log, read_state, write_latest_task, write_state
+from tasklog import append_log, cleanup_old_tasks, read_latest_task, read_log, read_state, write_latest_task, write_state
 from tasklog import state_path
 
 
@@ -24,6 +24,7 @@ def command_from_argv():
 
 def start_task(command):
     task_id = uuid.uuid4().hex[:12]
+    cleanup_old_tasks(task_id)
     write_state(task_id, status="starting", command=command, created_at=time.strftime("%Y-%m-%d %H:%M:%S"))
     write_latest_task(command, task_id)
     append_log(task_id, f"准备执行：{command}")
