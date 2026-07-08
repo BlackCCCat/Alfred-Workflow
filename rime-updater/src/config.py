@@ -16,6 +16,9 @@ RUNTIME_SETTINGS_FILE = WORKFLOW_DIR / "cache" / "runtime_settings.json"
 GITHUB_RELEASES_API = f"https://api.github.com/repos/{OWNER}/{GITHUB_REPO}/releases"
 GITHUB_MODEL_API = f"https://api.github.com/repos/{OWNER}/{MODEL_REPO}/releases/tags/{MODEL_TAG}"
 CNB_RELEASES_API = f"https://cnb.cool/{OWNER}/{CNB_REPO}/-/releases"
+GITHUB_DOWNLOAD_ACCELERATORS = {
+    "gh-proxy": "https://gh-proxy.com/",
+}
 
 REQUEST_TIMEOUT = 30
 
@@ -117,6 +120,21 @@ class RimeConfig:
     def source(cls) -> str:
         source = (os.getenv("source") or os.getenv("download_source") or "cnb").strip().lower()
         return source if source in {"cnb", "github"} else "cnb"
+
+    @classmethod
+    def github_download_accelerator(cls) -> str:
+        accelerator = (
+            os.getenv("github_download_accelerator")
+            or os.getenv("github_proxy")
+            or ""
+        ).strip().lower()
+        if accelerator in {"none", "off", "false", "0"}:
+            return ""
+        return accelerator if accelerator in GITHUB_DOWNLOAD_ACCELERATORS else ""
+
+    @classmethod
+    def github_download_accelerator_url(cls) -> str:
+        return GITHUB_DOWNLOAD_ACCELERATORS.get(cls.github_download_accelerator(), "")
 
     @classmethod
     def schema(cls) -> str:

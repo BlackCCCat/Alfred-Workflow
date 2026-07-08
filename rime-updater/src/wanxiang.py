@@ -330,6 +330,24 @@ def _asset_url(asset: dict) -> str:
     return ""
 
 
+def _download_url(url: str) -> str:
+    accelerator = RimeConfig.github_download_accelerator_url()
+    if RimeConfig.source() != "github" or not accelerator:
+        return url
+    if url.startswith(accelerator):
+        return url
+    return accelerator + url
+
+
+def _download_headers(download_url: str, asset_url: str) -> dict:
+    if RimeConfig.source() == "cnb":
+        return CNB_HEADERS
+    headers = dict(GITHUB_HEADERS)
+    if download_url != asset_url:
+        headers.pop("Authorization", None)
+    return headers
+
+
 def _normalise_asset(component: str, release: dict, asset: dict) -> Asset:
     digest = asset.get("digest", "")
     identity = (
@@ -475,7 +493,10 @@ def download_asset(asset: Asset, temp_dir: Path, log=None) -> Path:
     target = temp_dir / asset.name
     if log:
         log(f"开始下载 {asset.name}")
-    request = urllib.request.Request(asset.url, headers=CNB_HEADERS if RimeConfig.source() == "cnb" else GITHUB_HEADERS)
+    download_url = _download_url(asset.url)
+    if log and download_url != asset.url:
+        log(f"使用 GitHub 下载加速：{RimeConfig.github_download_accelerator_url()}")
+    request = urllib.request.Request(download_url, headers=_download_headers(download_url, asset.url))
     try:
         with urllib.request.urlopen(request, timeout=REQUEST_TIMEOUT) as response, target.open("wb") as fh:
             downloaded = 0
