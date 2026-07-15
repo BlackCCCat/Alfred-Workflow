@@ -16,6 +16,7 @@ RUNTIME_SETTINGS_FILE = WORKFLOW_DIR / "cache" / "runtime_settings.json"
 GITHUB_RELEASES_API = f"https://api.github.com/repos/{OWNER}/{GITHUB_REPO}/releases"
 GITHUB_MODEL_API = f"https://api.github.com/repos/{OWNER}/{MODEL_REPO}/releases/tags/{MODEL_TAG}"
 CNB_RELEASES_API = f"https://cnb.cool/{OWNER}/{CNB_REPO}/-/releases"
+CNB_API_RELEASE_TAGS_API = f"https://api.cnb.cool/{OWNER}/{CNB_REPO}/-/releases/tags"
 GITHUB_DOWNLOAD_ACCELERATORS = {
     "gh-proxy": "https://gh-proxy.com/",
 }
@@ -31,12 +32,20 @@ CNB_HEADERS = {
     "Accept": "application/vnd.cnb.web+json",
 }
 
+CNB_API_HEADERS = {
+    "User-Agent": "Alfred-Rime-Wanxiang-Updater/4.0",
+    "Accept": "application/json",
+}
+
 GITHUB_HEADERS = {
     "User-Agent": "Alfred-Rime-Wanxiang-Updater/4.0",
     "Accept": "application/vnd.github+json",
 }
 
 GITHUB_TOKEN = (os.getenv("github_token") or "").strip()
+CNB_TOKEN = (os.getenv("cnb_token") or GITHUB_TOKEN).strip()
+if CNB_TOKEN:
+    CNB_API_HEADERS["Authorization"] = f"Bearer {CNB_TOKEN}"
 if GITHUB_TOKEN:
     GITHUB_HEADERS["Authorization"] = f"Bearer {GITHUB_TOKEN}"
 

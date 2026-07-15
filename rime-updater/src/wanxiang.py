@@ -18,8 +18,11 @@ from pathlib import Path
 from typing import Optional
 
 from config import (
+    CNB_API_HEADERS,
+    CNB_API_RELEASE_TAGS_API,
     CNB_HEADERS,
     CNB_RELEASES_API,
+    CNB_TOKEN,
     DEFAULT_EXCLUDES,
     GITHUB_HEADERS,
     GITHUB_MODEL_API,
@@ -32,6 +35,7 @@ from config import (
 
 
 WORKFLOW_DIR = Path(__file__).resolve().parent.parent
+CNB_RELEASE_DETAIL_CACHE = {}
 
 
 class WanxiangError(Exception):
@@ -259,7 +263,14 @@ def asset_needs_update(asset: Asset) -> bool:
     keys = ["source", "tag", "name", "identity"]
     if asset.component in {"scheme", "dict"}:
         keys.append("schema")
-    if asset.component == "model" or not record.get("identity"):
+    has_cnb_sha256_identity = (
+        RimeConfig.source() == "cnb"
+        and bool(CNB_TOKEN)
+        and re.fullmatch(r"[0-9a-fA-F]{64}", asset.identity or "") is not None
+    )
+    if asset.component == "model" and not has_cnb_sha256_identity:
+        keys.extend(["updated_at", "size"])
+    elif not record.get("identity"):
         keys.extend(["updated_at", "size"])
     for key in keys:
         if record.get(key) != expected.get(key):
@@ -291,7 +302,13 @@ def local_records_summary() -> str:
 
 
 def request_json(url: str, source: Optional[str] = None, params: Optional[dict] = None):
-    headers = CNB_HEADERS if (source or RimeConfig.source()) == "cnb" else GITHUB_HEADERS
+    request_source = source or RimeConfig.source()
+    if request_source == "cnb_api":
+        headers = CNB_API_HEADERS
+    elif request_source == "cnb":
+        headers = CNB_HEADERS
+    else:
+        headers = GITHUB_HEADERS
     if params:
         url = f"{url}?{urllib.parse.urlencode(params)}"
     request = urllib.request.Request(url, headers=headers)
@@ -325,8 +342,12 @@ def _asset_size(asset: dict) -> int:
 def _asset_url(asset: dict) -> str:
     if asset.get("browser_download_url"):
         return asset["browser_download_url"]
+    if asset.get("brower_download_url"):
+        return asset["brower_download_url"]
     if asset.get("path"):
         return "https://cnb.cool" + asset["path"]
+    if asset.get("url"):
+        return asset["url"]
     return ""
 
 
@@ -341,6 +362,8 @@ def _download_url(url: str) -> str:
 
 def _download_headers(download_url: str, asset_url: str) -> dict:
     if RimeConfig.source() == "cnb":
+        if "api.cnb.cool" in urllib.parse.urlparse(download_url).netloc:
+            return CNB_API_HEADERS
         return CNB_HEADERS
     headers = dict(GITHUB_HEADERS)
     if download_url != asset_url:
@@ -349,12 +372,17 @@ def _download_headers(download_url: str, asset_url: str) -> dict:
 
 
 def _normalise_asset(component: str, release: dict, asset: dict) -> Asset:
+    hash_algo = (asset.get("hash_algo") or "").lower()
+    hash_value = str(asset.get("hash_value") or asset.get("sha256") or "").strip()
     digest = asset.get("digest", "")
-    identity = (
-        digest.split(":", 1)[-1]
-        if digest
-        else str(asset.get("cnb_id") or asset.get("id") or asset.get("asset_id") or "")
-    )
+    if hash_algo == "sha256" and hash_value:
+        identity = hash_value
+    elif hash_value:
+        identity = hash_value
+    elif digest:
+        identity = digest.split(":", 1)[-1]
+    else:
+        identity = str(asset.get("cnb_id") or asset.get("id") or asset.get("asset_id") or "")
     if not identity:
         identity = "|".join(
             [
@@ -402,6 +430,35 @@ def _is_model_release(release: dict) -> bool:
     return _release_tag(release) in {"model", "LTS"}
 
 
+def _extract_cnb_releases(data) -> list[dict]:
+    if isinstance(data, list):
+        return [release for release in data if isinstance(release, dict)]
+    if not isinstance(data, dict):
+        return []
+    releases = data.get("releases")
+    if isinstance(releases, list):
+        return [release for release in releases if isinstance(release, dict)]
+    if isinstance(data.get("assets"), list) and _release_tag(data):
+        return [data]
+    return []
+
+
+def _cnb_release_detail(release: dict) -> dict:
+    if not CNB_TOKEN:
+        return release
+    tag = _release_tag(release)
+    if not tag:
+        return release
+    if tag in CNB_RELEASE_DETAIL_CACHE:
+        return CNB_RELEASE_DETAIL_CACHE[tag]
+
+    tag_url = f"{CNB_API_RELEASE_TAGS_API}/{urllib.parse.quote(tag, safe='')}"
+    detail, _headers = request_json(tag_url, source="cnb_api")
+    detail_releases = _extract_cnb_releases(detail)
+    CNB_RELEASE_DETAIL_CACHE[tag] = detail_releases[0] if detail_releases else release
+    return CNB_RELEASE_DETAIL_CACHE[tag]
+
+
 def list_releases(include_model=False) -> list[dict]:
     source = RimeConfig.source()
     if source == "github":
@@ -409,7 +466,7 @@ def list_releases(include_model=False) -> list[dict]:
         return data
 
     first_page, headers = request_json(CNB_RELEASES_API, source="cnb")
-    releases = list(first_page.get("releases", []))
+    releases = _extract_cnb_releases(first_page)
     if not include_model or any(_is_model_release(release) for release in releases):
         return releases
 
@@ -418,7 +475,7 @@ def list_releases(include_model=False) -> list[dict]:
     last_page = min((total + page_size - 1) // page_size, 10)
     for page in range(2, last_page + 1):
         data, _headers = request_json(CNB_RELEASES_API, source="cnb", params={"page": page})
-        releases.extend(data.get("releases", []))
+        releases.extend(_extract_cnb_releases(data))
         if any(_is_model_release(release) for release in releases):
             break
     return releases
@@ -435,6 +492,8 @@ def _find_asset(releases: list[dict], component: str, asset_name: str, selected_
             continue
         if component == "model" and not _is_model_release(release):
             continue
+        if RimeConfig.source() == "cnb":
+            release = _cnb_release_detail(release)
         for asset in release.get("assets", []):
             if asset.get("name") == asset_name:
                 candidates.append(_normalise_asset(component, release, asset))

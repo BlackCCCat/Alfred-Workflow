@@ -9,7 +9,7 @@ Alfred Workflow，用于更新 Rime 万象方案、词库和语法模型。
 - 输入法引擎：`squirrel`、`cobra` 或 `fcitx5`
 - 下载源：默认 `CNB`，也可切换到 `GitHub`
 - GitHub 下载加速：可选。选择 GitHub 源时，可使用 `gh-proxy.com`
-- GitHub Token：可选，选择 GitHub 源时填写，用于 GitHub API 请求
+- CNB / GitHub Token：可选，选择 CNB 源时作为 CNB Token 请求 CNB API 并读取 sha256；选择 GitHub 源时作为 GitHub Token 请求 GitHub API
 - 方案类型：标准版、墨奇、小鹤、自然码、虎码、五笔、汉心、首右
 - Rime 用户目录：可选，留空时按输入法引擎自动判断
 - 排除文件列表路径：可选，留空时使用 Workflow 目录下的 `cache/user_exclude_file.txt`
@@ -49,6 +49,6 @@ Alfred Workflow，用于更新 Rime 万象方案、词库和语法模型。
 
 ## 说明
 
-Workflow 使用 Python 标准库实现，不依赖 `requests` 等第三方包。GitHub 下载加速只作用于 release 文件下载，不会代理 GitHub API 请求；填写 GitHub Token 时，Token 也不会发送给加速域名。
+Workflow 使用 Python 标准库实现，不依赖 `requests` 等第三方包。选择 CNB 源且填写 Token 时，会使用 CNB API 获取 release 信息，并优先使用 release asset 的 sha256 作为版本判断依据；未填写 Token 时沿用原 CNB 页面 JSON 请求逻辑。GitHub 下载加速只作用于 release 文件下载，不会代理 GitHub API 请求；填写 Token 时，Token 不会发送给 GitHub 加速域名。
 
 打包时只会包含 `info.plist`、`icon.png`、`README.md` 和 `src/*.py`，不会把运行时生成的 `cache/` 目录或任何 JSON 记录文件打进 `.alfredworkflow`。
