@@ -1,17 +1,21 @@
+import hashlib
+import http.client
 import json
 import os
 import re
 import shutil
 import signal
 import socket
+import ssl
 import subprocess
 import tempfile
 import threading
+import time
 import urllib.error
 import urllib.parse
 import urllib.request
 import zipfile
-from contextlib import contextmanager
+from contextlib import contextmanager, suppress
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
@@ -275,7 +279,7 @@ def asset_needs_update(asset: Asset) -> bool:
     for key in keys:
         if record.get(key) != expected.get(key):
             return True
-    return False
+    return download_cache_path(asset).exists()
 
 
 def local_records_summary() -> str:
@@ -301,6 +305,11 @@ def local_records_summary() -> str:
     return "本地记录：" + "；".join(lines)
 
 
+def _certificate_verification_failed(exc: Exception) -> bool:
+    reason = getattr(exc, "reason", exc)
+    return isinstance(reason, ssl.SSLCertVerificationError) or "CERTIFICATE_VERIFY_FAILED" in str(reason)
+
+
 def request_json(url: str, source: Optional[str] = None, params: Optional[dict] = None):
     request_source = source or RimeConfig.source()
     if request_source == "cnb_api":
@@ -318,11 +327,16 @@ def request_json(url: str, source: Optional[str] = None, params: Optional[dict] 
                 body = response.read().decode("utf-8")
                 return json.loads(body), response.headers
     except urllib.error.HTTPError as exc:
+        if (exc.code == 403 and urllib.parse.urlparse(url).hostname == "api.github.com"
+                and exc.headers.get("X-RateLimit-Remaining") == "0"):
+            raise WanxiangError("GitHub API 当前出口 IP 的匿名访问额度已用完；请稍后重试，或在 Workflow 配置中填写 GitHub Token") from exc
         raise WanxiangError(f"请求失败：HTTP {exc.code} {url}") from exc
     except (TimeoutError, socket.timeout) as exc:
         raise WanxiangError(str(exc)) from exc
-    except urllib.error.URLError as exc:
-        raise WanxiangError(f"请求失败：{exc.reason}") from exc
+    except (urllib.error.URLError, ssl.SSLCertVerificationError) as exc:
+        if _certificate_verification_failed(exc):
+            raise WanxiangError(f"Python 证书验证失败：{getattr(exc, 'reason', exc)}") from exc
+        raise WanxiangError(f"请求失败：{getattr(exc, 'reason', exc)}") from exc
     except json.JSONDecodeError as exc:
         raise WanxiangError("接口返回不是有效 JSON") from exc
 
@@ -358,6 +372,14 @@ def _download_url(url: str) -> str:
     if url.startswith(accelerator):
         return url
     return accelerator + url
+
+
+def download_cache_path(asset: Asset) -> Path:
+    cache_key = "\n".join((
+        RimeConfig.source(), asset.component, asset.tag, asset.name,
+        asset.identity, asset.updated_at, str(asset.size), _download_url(asset.url),
+    ))
+    return WORKFLOW_DIR / "cache" / "downloads" / f"{hashlib.sha256(cache_key.encode('utf-8')).hexdigest()}.part"
 
 
 def _download_headers(download_url: str, asset_url: str) -> dict:
@@ -546,40 +568,108 @@ def safe_target(base_dir: Path, member_name: str) -> Path:
     return target
 
 
-def download_asset(asset: Asset, temp_dir: Path, log=None) -> Path:
+def download_asset(asset: Asset, log=None) -> Path:
     if not asset.url:
         raise WanxiangError(f"{asset.name} 缺少下载地址")
-    target = temp_dir / asset.name
+    download_url = _download_url(asset.url)
+    target = download_cache_path(asset)
+    cache_dir = target.parent
+    cache_dir.mkdir(parents=True, exist_ok=True)
+    for old in cache_dir.glob("*.part"):
+        try:
+            if time.time() - old.stat().st_mtime > 30 * 86400:
+                old.unlink()
+        except OSError:
+            pass
     if log:
         log(f"开始下载 {asset.name}")
-    download_url = _download_url(asset.url)
     if log and download_url != asset.url:
         log(f"使用 GitHub 下载加速：{RimeConfig.github_download_accelerator_url()}")
-    request = urllib.request.Request(download_url, headers=_download_headers(download_url, asset.url))
-    try:
-        with urllib.request.urlopen(request, timeout=REQUEST_TIMEOUT) as response, target.open("wb") as fh:
+    for attempt in range(3):
+        downloaded = target.stat().st_size if target.exists() else 0
+        if not asset.size or downloaded > asset.size:
             downloaded = 0
-            next_report = 0
-            while True:
-                chunk = response.read(1024 * 256)
-                if not chunk:
-                    break
-                fh.write(chunk)
-                downloaded += len(chunk)
-                if log and asset.size:
-                    percent = int(downloaded * 100 / asset.size)
-                    if percent >= next_report:
-                        log(f"下载进度 {asset.name}: {percent}% ({downloaded}/{asset.size} bytes)")
-                        next_report += 10
-    except urllib.error.HTTPError as exc:
-        raise WanxiangError(f"下载失败：HTTP {exc.code} {asset.name}") from exc
-    except urllib.error.URLError as exc:
-        raise WanxiangError(f"下载失败：{exc.reason}") from exc
-
-    if asset.size and target.stat().st_size != asset.size:
-        raise WanxiangError(f"{asset.name} 大小校验失败，期望 {asset.size}，实际 {target.stat().st_size}")
+        if asset.size and downloaded == asset.size:
+            break
+        headers = _download_headers(download_url, asset.url)
+        if downloaded:
+            headers["Range"] = f"bytes={downloaded}-"
+            if log:
+                log(f"续传 {asset.name}: 已有 {downloaded}/{asset.size} bytes")
+        request = urllib.request.Request(download_url, headers=headers)
+        try:
+            with urllib.request.urlopen(request, timeout=REQUEST_TIMEOUT) as response:
+                if downloaded:
+                    if response.status == 206:
+                        content_range = re.fullmatch(r"bytes (\d+)-(\d+)/(\d+|\*)", response.headers.get("Content-Range", ""))
+                        valid_range = (
+                            content_range
+                            and int(content_range[1]) == downloaded
+                            and int(content_range[2]) >= downloaded
+                            and int(content_range[2]) < asset.size
+                            and (content_range[3] == "*" or int(content_range[3]) == asset.size)
+                        )
+                        if not valid_range:
+                            target.unlink(missing_ok=True)
+                            raise WanxiangError(f"{asset.name} 续传响应范围不匹配，已清除分片")
+                    elif response.status == 200:
+                        if log:
+                            log(f"服务器未提供续传，从头下载 {asset.name}")
+                        downloaded = 0
+                    else:
+                        raise WanxiangError(f"{asset.name} 续传失败：HTTP {response.status}")
+                elif response.status != 200:
+                    raise WanxiangError(f"{asset.name} 下载失败：HTTP {response.status}")
+                next_report = (downloaded * 100 // asset.size // 10 + 1) * 10 if downloaded and asset.size else 0
+                with target.open("ab" if downloaded else "wb") as fh:
+                    while True:
+                        chunk = response.read(1024 * 256)
+                        if not chunk:
+                            break
+                        fh.write(chunk)
+                        downloaded += len(chunk)
+                        if log and asset.size:
+                            percent = int(downloaded * 100 / asset.size)
+                            if percent >= next_report:
+                                log(f"下载进度 {asset.name}: {percent}% ({downloaded}/{asset.size} bytes)")
+                                next_report = percent + 10
+        except urllib.error.HTTPError as exc:
+            raise WanxiangError(f"下载失败：HTTP {exc.code} {asset.name}") from exc
+        except (urllib.error.URLError, ssl.SSLCertVerificationError) as exc:
+            if _certificate_verification_failed(exc):
+                raise WanxiangError(f"Python 证书验证失败：{getattr(exc, 'reason', exc)}；已保留分片") from exc
+            if attempt == 2:
+                raise WanxiangError(f"下载中断：{exc}；已保留分片，可重新运行继续下载") from exc
+            if log:
+                log(f"下载中断，正在重试 {asset.name}: {exc}")
+            continue
+        except (http.client.IncompleteRead, ConnectionError, TimeoutError, socket.timeout) as exc:
+            if attempt == 2:
+                raise WanxiangError(f"下载中断：{exc}；已保留分片，可重新运行继续下载") from exc
+            if log:
+                log(f"下载中断，正在重试 {asset.name}: {exc}")
+            continue
+        actual = target.stat().st_size
+        if not asset.size or actual == asset.size:
+            break
+        if actual > asset.size:
+            target.unlink()
+            raise WanxiangError(f"{asset.name} 大小校验失败，期望 {asset.size}，实际 {actual}")
+        if log and attempt < 2:
+            log(f"下载提前结束，正在续传 {asset.name}: {actual}/{asset.size} bytes")
+    actual = target.stat().st_size
+    if asset.size and actual != asset.size:
+        raise WanxiangError(f"{asset.name} 大小校验失败，期望 {asset.size}，实际 {actual}；已保留分片，可重新运行继续下载")
+    if re.fullmatch(r"[0-9a-fA-F]{64}", asset.identity or ""):
+        digest = hashlib.sha256()
+        with target.open("rb") as fh:
+            for chunk in iter(lambda: fh.read(1024 * 1024), b""):
+                digest.update(chunk)
+        if digest.hexdigest().lower() != asset.identity.lower():
+            target.unlink()
+            raise WanxiangError(f"{asset.name} SHA256 校验失败，已清除分片")
     if log:
-        log(f"下载完成 {asset.name} ({target.stat().st_size} bytes)")
+        log(f"下载完成 {asset.name} ({actual} bytes)")
     return target
 
 
@@ -749,7 +839,7 @@ def install_asset(asset: Asset, log=None) -> str:
     cleanup_backups(log=log)
     with tempfile.TemporaryDirectory(prefix="wanxiang-alfred-") as tmp:
         temp_dir = Path(tmp)
-        downloaded = download_asset(asset, temp_dir, log=log)
+        downloaded = download_asset(asset, log=log)
 
         if asset.component == "model":
             target = RimeConfig.setting_dir() / MODEL_FILE
@@ -760,6 +850,8 @@ def install_asset(asset: Asset, log=None) -> str:
             shutil.copy2(downloaded, target)
             save_copied_files("model", RimeConfig.setting_dir(), [MODEL_FILE])
             save_record(asset)
+            with suppress(OSError):
+                downloaded.unlink()
             if log:
                 log(f"模型记录已更新：{asset.tag} / {asset.name}")
             return f"模型已更新：{asset.name}"
@@ -770,6 +862,8 @@ def install_asset(asset: Asset, log=None) -> str:
             log(f"开始写入 {component_label(asset.component)} 到 {target_dir}")
         copied, _ignored = copy_tree(extracted, target_dir, asset.component, log=log)
         save_record(asset)
+        with suppress(OSError):
+            downloaded.unlink()
         if log:
             log(f"{component_label(asset.component)}记录已更新：{asset.tag} / {asset.name}")
         return f"{component_label(asset.component)}已更新：{asset.name}（复制 {copied} 个文件）"

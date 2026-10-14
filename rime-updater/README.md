@@ -43,6 +43,8 @@ Alfred Workflow，用于更新 Rime 万象方案、词库和语法模型。
 
 执行 `rimes`、`rimed`、`rimem` 和 `rimeall` 时会打开 Text View 进度页。实际任务在后台执行，日志写入 `cache/tasks/`，Text View 会自动刷新显示下载、解压、复制和部署进度。
 
+下载中断时会自动重试，并把未完成的文件保存在 Workflow 的 `cache/downloads/`。重新运行更新命令会从已有字节续传；服务器不支持续传时会重新下载。安装成功后清除对应分片，超过 30 天的旧分片会在下次下载时清理。`rimeall` 会处理本地记录尚未匹配或仍有未完成分片的组件。
+
 方案更新时，更新说明会单独显示在 Text View 的“更新说明”部分，不会混进日志区。`rimee` 切换输入法和 `rimef` 手动部署会直接用通知提示结果。
 
 方案更新会尊重排除文件列表。如果配置项留空，会使用 Workflow 目录下的 `cache/user_exclude_file.txt`；如果文件不存在，会自动创建一个默认排除列表。排除列表每行一个相对 Rime 用户目录的路径，`#` 开头为注释。
@@ -50,5 +52,7 @@ Alfred Workflow，用于更新 Rime 万象方案、词库和语法模型。
 ## 说明
 
 Workflow 使用 Python 标准库实现，不依赖 `requests` 等第三方包。选择 CNB 源且填写 Token 时，会使用 CNB API 获取 release 信息，并优先使用 release asset 的 sha256 作为版本判断依据；未填写 Token 时沿用原 CNB 页面 JSON 请求逻辑。GitHub 下载加速只作用于 release 文件下载，不会代理 GitHub API 请求；填写 Token 时，Token 不会发送给 GitHub 加速域名。
+
+网络请求和断点续传均由 Python 实现。GitHub Token 为可选项；匿名访问额度用完时，可稍后重试或填写 Token。
 
 打包时只会包含 `info.plist`、`icon.png`、`README.md` 和 `src/*.py`，不会把运行时生成的 `cache/` 目录或任何 JSON 记录文件打进 `.alfredworkflow`。
