@@ -51,6 +51,7 @@ jobs:
             history-of-today/History of Today.alfredworkflow
             hot-news/workflow-packages/HotNews.alfredworkflow
             icon-extractor/Get App Icon.alfredworkflow
+            rime-updater/wanxiang-updater-alfred6.alfredworkflow
             rime-updater/wanxiang-updater.alfredworkflow
             safari-bookmarks/Safari Bookmarks.alfredworkflow
             word-segment/Word Segment.alfredworkflow
