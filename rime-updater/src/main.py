@@ -26,6 +26,8 @@ def switch_engine(tag: str) -> str:
 
 
 def update_component(component, tag="", name="", force=True, log=None, state_writer=None):
+    if state_writer:
+        state_writer(component=component, phase="checking", downloaded=0, total=0)
     if log:
         log(f"检查远端{component_label(component)}资源")
         log(f"请求远端 release 列表，源：{RimeConfig.source()}，超时：{REQUEST_TIMEOUT} 秒")
@@ -34,6 +36,8 @@ def update_component(component, tag="", name="", force=True, log=None, state_wri
         log(f"远端{component_label(component)}资源：{asset.tag} / {asset.name}")
     should_update = force or asset_needs_update(asset)
     if not should_update:
+        if state_writer:
+            state_writer(phase="skipped")
         if log:
             log(f"本地记录匹配，跳过{component_label(component)}更新")
         return f"{component_label(component)}已是最新：{asset.tag} / {asset.name}", False, None
@@ -46,7 +50,15 @@ def update_component(component, tag="", name="", force=True, log=None, state_wri
 
     if not force and log:
         log(f"本地记录不匹配，开始更新{component_label(component)}")
-    return install_asset(asset, log=log), True, notes
+
+    def on_progress(downloaded, total):
+        if state_writer:
+            state_writer(component=component, phase="downloading", downloaded=downloaded, total=total)
+
+    result = install_asset(asset, log=log, progress=on_progress if state_writer else None)
+    if state_writer:
+        state_writer(phase="installed")
+    return result, True, notes
 
 
 def scheme_release_notes(asset):
@@ -88,12 +100,16 @@ def run(command, log=None, state_writer=None):
             if item == "scheme" and did_update:
                 scheme_notes = notes
         if updated:
+            if state_writer:
+                state_writer(component="deploy", phase="deploying", downloaded=0, total=0)
             messages.append(deploy_rime(log=log))
         else:
             messages.append("本地记录已是最新，跳过部署")
         return messages, scheme_notes
 
     if component == "deploy":
+        if state_writer:
+            state_writer(component="deploy", phase="deploying", downloaded=0, total=0)
         return [deploy_rime(log=log)], None
 
     if component in {"scheme", "dict", "model"}:

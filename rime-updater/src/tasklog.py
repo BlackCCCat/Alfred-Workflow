@@ -102,5 +102,7 @@ def write_state(task_id: str, **updates) -> dict:
     state = read_state(task_id)
     state.update(updates)
     state["updated_at"] = now_text()
-    state_path(task_id).write_text(json.dumps(state, ensure_ascii=False, indent=2), encoding="utf-8")
+    temporary = directory / "state.json.tmp"
+    temporary.write_text(json.dumps(state, ensure_ascii=False, indent=2), encoding="utf-8")
+    temporary.replace(state_path(task_id))
     return state

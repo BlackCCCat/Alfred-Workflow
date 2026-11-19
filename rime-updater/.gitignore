@@ -1,4 +1,5 @@
 cache/
 *.alfredworkflow
+!wanxiang-updater-alfred6.alfredworkflow
 __pycache__/
 .DS_Store

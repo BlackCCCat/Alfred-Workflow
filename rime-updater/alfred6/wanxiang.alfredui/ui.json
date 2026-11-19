@@ -1,0 +1,146 @@
+{
+  "bundleid": "com.blackcccat.alfred.rime-wanxiang-updater.ui",
+  "variablesconfig": {
+    "command": { "default": "", "src": "args[0]" },
+    "task_id": { "default": "" },
+    "rime_engine": { "src": "variable", "scriptenv": true },
+    "source": { "src": "variable", "scriptenv": true },
+    "github_download_accelerator": { "src": "variable", "scriptenv": true },
+    "schema": { "src": "variable", "scriptenv": true },
+    "rime_user_dir": { "src": "variable", "scriptenv": true },
+    "exclude_file_path": { "src": "variable", "scriptenv": true },
+    "github_token": { "src": "variable", "scriptenv": true }
+  },
+  "pulse": {
+    "src": "scripts/bridge.py",
+    "args": ["poll", "{var:task_id}"],
+    "interval": 1
+  },
+  "window": {
+    "title": "万象 Rime 更新",
+    "size": { "width": 920, "height": 740 },
+    "minsize": { "width": 760, "height": 620 },
+    "frameautosave": true,
+    "padding": 16,
+    "root": {
+      "type": "view",
+      "layout": "border",
+      "spacing": 14,
+      "events": [
+        {
+          "triggers": "launched",
+          "action": {
+            "type": "script",
+            "src": "scripts/bridge.py",
+            "args": ["open", "{var:command}"],
+            "async": true
+          }
+        }
+      ],
+      "components": [
+        {
+          "type": "view",
+          "layout": "inline",
+          "direction": "vertical",
+          "spacing": 8,
+          "constraints": { "region": "top" },
+          "components": [
+            { "type": "label", "text": "万象 Rime 更新", "font": { "size": "large", "weight": "bold" } },
+            { "id": "source_status", "type": "label", "text": "读取配置中…", "colour": "secondaryLabelColor" },
+            { "id": "path_status", "type": "label", "text": "", "colour": "secondaryLabelColor", "linebreak": "truncatemiddle", "selectable": true },
+            {
+              "type": "view",
+              "layout": "inline",
+              "direction": "horizontal",
+              "spacing": 12,
+              "components": [
+                { "id": "engine_status", "type": "label", "text": "当前：读取中", "constraints": { "size": { "width": 200 } } },
+                {
+                  "id": "engine_picker",
+                  "type": "picker",
+                  "selected": "default",
+                  "items": [
+                    { "text": "使用 Workflow 配置", "value": "default" },
+                    { "text": "鼠须管 Squirrel", "value": "squirrel" },
+                    { "text": "元书 Cobra", "value": "cobra" },
+                    { "text": "小企鹅 Fcitx5", "value": "fcitx5" }
+                  ],
+                  "events": [
+                    {
+                      "triggers": "changed",
+                      "action": {
+                        "type": "script",
+                        "src": "scripts/bridge.py",
+                        "args": ["switch", "{value:engine_picker.selected.value}"],
+                        "async": true
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            { "id": "scheme_record", "type": "label", "text": "方案：读取中", "colour": "secondaryLabelColor" },
+            { "id": "dict_record", "type": "label", "text": "词库：读取中", "colour": "secondaryLabelColor" },
+            { "id": "model_record", "type": "label", "text": "模型：读取中", "colour": "secondaryLabelColor" },
+            {
+              "type": "view",
+              "layout": "inline",
+              "direction": "horizontal",
+              "spacing": 8,
+              "components": [
+                { "type": "button", "text": "更新全部", "events": [{ "triggers": "actioned", "action": { "type": "script", "src": "scripts/bridge.py", "args": ["start", "all"], "async": true } }] },
+                { "type": "button", "text": "更新方案", "events": [{ "triggers": "actioned", "action": { "type": "script", "src": "scripts/bridge.py", "args": ["start", "scheme"], "async": true } }] },
+                { "type": "button", "text": "更新词库", "events": [{ "triggers": "actioned", "action": { "type": "script", "src": "scripts/bridge.py", "args": ["start", "dict"], "async": true } }] },
+                { "type": "button", "text": "更新模型", "events": [{ "triggers": "actioned", "action": { "type": "script", "src": "scripts/bridge.py", "args": ["start", "model"], "async": true } }] },
+                { "type": "button", "text": "重新部署", "events": [{ "triggers": "actioned", "action": { "type": "script", "src": "scripts/bridge.py", "args": ["start", "deploy"], "async": true } }] }
+              ]
+            },
+            { "id": "task_status", "type": "label", "text": "准备就绪", "font": { "weight": "bold" } },
+            { "id": "task_detail", "type": "label", "text": "", "linebreak": "truncatetail" },
+            { "id": "download_progress", "type": "progress", "style": "linear", "progress": 0 },
+            { "id": "task_bytes", "type": "label", "text": "等待下载信息", "colour": "secondaryLabelColor" }
+          ]
+        },
+        {
+          "type": "view",
+          "layout": "flex",
+          "rows": 2,
+          "cols": 1,
+          "spacing": 12,
+          "constraints": { "region": "centre" },
+          "components": [
+            {
+              "type": "view",
+              "layout": "border",
+              "spacing": 6,
+              "constraints": { "grid": { "row": 0, "col": 0, "rowweight": 0.45 } },
+              "components": [
+                { "type": "label", "text": "更新说明", "font": { "weight": "bold" }, "constraints": { "region": "top" } },
+                { "id": "notes_area", "type": "markdownarea", "text": "暂无更新说明", "constraints": { "region": "centre", "size": { "height": 120 } } }
+              ]
+            },
+            {
+              "type": "view",
+              "layout": "border",
+              "spacing": 6,
+              "constraints": { "grid": { "row": 1, "col": 0, "rowweight": 0.55 } },
+              "components": [
+                { "type": "label", "text": "任务日志", "font": { "weight": "bold" }, "constraints": { "region": "top" } },
+                {
+                  "id": "log_area",
+                  "type": "textarea",
+                  "text": "暂无任务日志",
+                  "editable": false,
+                  "selectable": true,
+                  "font": { "monospaced": true },
+                  "behaviour": { "mode": "replace", "scroll": "auto" },
+                  "constraints": { "region": "centre", "size": { "height": 150 } }
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

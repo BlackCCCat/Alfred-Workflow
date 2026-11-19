@@ -14,6 +14,27 @@ import wanxiang
 
 
 class DownloadResumeTests(unittest.TestCase):
+    def test_download_reports_structured_byte_progress(self):
+        payload = b"progress" * 128
+        asset = wanxiang.Asset(
+            "model", "LTS", "model", "model.gram",
+            "https://example.invalid/model.gram", len(payload), "today",
+            hashlib.sha256(payload).hexdigest(),
+        )
+        updates = []
+
+        def urlopen(request, timeout):
+            response = io.BytesIO(payload)
+            response.status = 200
+            response.headers = {}
+            return response
+
+        with tempfile.TemporaryDirectory() as workflow_dir, patch.object(wanxiang, "WORKFLOW_DIR", Path(workflow_dir)):
+            with patch.object(wanxiang.urllib.request, "urlopen", side_effect=urlopen):
+                wanxiang.download_asset(asset, progress=lambda done, total: updates.append((done, total)))
+        self.assertEqual(updates[0], (0, len(payload)))
+        self.assertEqual(updates[-1], (len(payload), len(payload)))
+
     def test_github_rate_limit_is_reported_from_python_response(self):
         url = "https://api.github.com/repos/example/releases"
         error = urllib.error.HTTPError(

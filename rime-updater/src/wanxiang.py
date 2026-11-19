@@ -568,7 +568,7 @@ def safe_target(base_dir: Path, member_name: str) -> Path:
     return target
 
 
-def download_asset(asset: Asset, log=None) -> Path:
+def download_asset(asset: Asset, log=None, progress=None) -> Path:
     if not asset.url:
         raise WanxiangError(f"{asset.name} 缺少下载地址")
     download_url = _download_url(asset.url)
@@ -585,10 +585,14 @@ def download_asset(asset: Asset, log=None) -> Path:
         log(f"开始下载 {asset.name}")
     if log and download_url != asset.url:
         log(f"使用 GitHub 下载加速：{RimeConfig.github_download_accelerator_url()}")
+    last_progress = -1
     for attempt in range(3):
         downloaded = target.stat().st_size if target.exists() else 0
         if not asset.size or downloaded > asset.size:
             downloaded = 0
+        if progress:
+            progress(downloaded, asset.size)
+            last_progress = int(downloaded * 100 / asset.size) if asset.size else 0
         if asset.size and downloaded == asset.size:
             break
         headers = _download_headers(download_url, asset.url)
@@ -628,6 +632,11 @@ def download_asset(asset: Asset, log=None) -> Path:
                             break
                         fh.write(chunk)
                         downloaded += len(chunk)
+                        if progress and asset.size:
+                            current_progress = min(100, int(downloaded * 100 / asset.size))
+                            if current_progress != last_progress:
+                                progress(downloaded, asset.size)
+                                last_progress = current_progress
                         if log and asset.size:
                             percent = int(downloaded * 100 / asset.size)
                             if percent >= next_report:
@@ -834,12 +843,12 @@ def copy_tree(source_dir: Path, target_dir: Path, component: str, log=None) -> t
     return copied, 0
 
 
-def install_asset(asset: Asset, log=None) -> str:
+def install_asset(asset: Asset, log=None, progress=None) -> str:
     RimeConfig.setting_dir().mkdir(parents=True, exist_ok=True)
     cleanup_backups(log=log)
     with tempfile.TemporaryDirectory(prefix="wanxiang-alfred-") as tmp:
         temp_dir = Path(tmp)
-        downloaded = download_asset(asset, log=log)
+        downloaded = download_asset(asset, log=log, progress=progress)
 
         if asset.component == "model":
             target = RimeConfig.setting_dir() / MODEL_FILE
