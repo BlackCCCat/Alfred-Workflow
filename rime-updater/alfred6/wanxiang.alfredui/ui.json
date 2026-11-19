@@ -50,20 +50,21 @@
             { "id": "path_status", "type": "label", "text": "", "colour": "secondaryLabelColor", "linebreak": "truncatemiddle", "selectable": true },
             {
               "type": "view",
-              "layout": "inline",
-              "direction": "horizontal",
+              "layout": "form",
               "spacing": 12,
               "components": [
-                { "id": "engine_status", "type": "label", "text": "当前：读取中", "constraints": { "size": { "width": 200 } } },
+                { "type": "label", "text": "当前输入法：" },
                 {
                   "id": "engine_picker",
                   "type": "picker",
-                  "selected": "default",
+                  "selected": "squirrel",
+                  "constraints": { "position": "left", "size": { "width": 280 } },
                   "items": [
-                    { "text": "使用 Workflow 配置", "value": "default" },
                     { "text": "鼠须管 Squirrel", "value": "squirrel" },
                     { "text": "元书 Cobra", "value": "cobra" },
-                    { "text": "小企鹅 Fcitx5", "value": "fcitx5" }
+                    { "text": "小企鹅 Fcitx5", "value": "fcitx5" },
+                    { "type": "separator" },
+                    { "text": "恢复 Workflow 配置", "value": "default" }
                   ],
                   "events": [
                     {
@@ -133,7 +134,7 @@
                   "editable": false,
                   "selectable": true,
                   "font": { "monospaced": true },
-                  "behaviour": { "mode": "replace", "scroll": "auto" },
+                  "behaviour": { "mode": "replace", "scroll": "end" },
                   "constraints": { "region": "centre", "size": { "height": 150 } }
                 }
               ]

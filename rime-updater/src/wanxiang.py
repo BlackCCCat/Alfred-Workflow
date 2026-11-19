@@ -264,15 +264,27 @@ def asset_needs_update(asset: Asset) -> bool:
         return True
 
     expected = _asset_record(asset)
+    has_sha256_identity = re.fullmatch(r"[0-9a-fA-F]{64}", asset.identity or "") is not None
+    record_identity = str(record.get("identity") or "")
+    if (
+        asset.component == "model"
+        and has_sha256_identity
+        and record_identity.lower() == asset.identity.lower()
+        and record.get("name") == asset.name
+        and asset.size > 0
+        and record.get("size") == asset.size
+    ):
+        model_file = RimeConfig.setting_dir() / MODEL_FILE
+        try:
+            if model_file.stat().st_size == asset.size:
+                return download_cache_path(asset).exists()
+        except OSError:
+            pass
+
     keys = ["source", "tag", "name", "identity"]
     if asset.component in {"scheme", "dict"}:
         keys.append("schema")
-    has_cnb_sha256_identity = (
-        RimeConfig.source() == "cnb"
-        and bool(CNB_TOKEN)
-        and re.fullmatch(r"[0-9a-fA-F]{64}", asset.identity or "") is not None
-    )
-    if asset.component == "model" and not has_cnb_sha256_identity:
+    if asset.component == "model" and not has_sha256_identity:
         keys.extend(["updated_at", "size"])
     elif not record.get("identity"):
         keys.extend(["updated_at", "size"])
@@ -494,7 +506,7 @@ def list_releases(include_model=False) -> list[dict]:
 
     total = int(headers.get("X-Cnb-Total") or headers.get("X-CNB-Total") or len(releases))
     page_size = int(headers.get("X-Cnb-Page-Size") or headers.get("X-CNB-Page-Size") or len(releases) or 1)
-    last_page = min((total + page_size - 1) // page_size, 10)
+    last_page = (total + page_size - 1) // page_size
     for page in range(2, last_page + 1):
         data, _headers = request_json(CNB_RELEASES_API, source="cnb", params={"page": page})
         releases.extend(_extract_cnb_releases(data))

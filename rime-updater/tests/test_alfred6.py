@@ -46,10 +46,16 @@ class Alfred6WorkflowTests(unittest.TestCase):
             variables = ui["variablesconfig"]
             self.assertEqual(variables["command"]["src"], "args[0]")
             self.assertTrue(variables["github_token"]["scriptenv"])
+            engine_row = ui["window"]["root"]["components"][0]["components"][3]
+            self.assertEqual(engine_row["layout"], "form")
+            self.assertEqual(engine_row["components"][0]["text"], "当前输入法：")
+            self.assertEqual(engine_row["components"][1]["id"], "engine_picker")
             content = ui["window"]["root"]["components"][1]
             self.assertEqual((content["layout"], content["rows"]), ("flex", 2))
             self.assertEqual(content["components"][0]["components"][1]["type"], "markdownarea")
-            self.assertEqual(content["components"][1]["components"][1]["type"], "textarea")
+            log_area = content["components"][1]["components"][1]
+            self.assertEqual(log_area["type"], "textarea")
+            self.assertEqual(log_area["behaviour"]["scroll"], "end")
 
             with tempfile.TemporaryDirectory() as directory:
                 archive.extractall(directory)
