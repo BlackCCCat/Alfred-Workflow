@@ -1,0 +1,145 @@
+{
+  "type": "view",
+  "layout": "flex",
+  "rows": 2,
+  "cols": 2,
+  "spacing": 8,
+  "components": [
+    {
+      "type": "view",
+      "layout": "form",
+      "spacing": 8,
+      "constraints": { "grid": { "row": 0, "col": 0, "colweight": 0.5 } },
+      "components": [
+        { "type": "label", "text": "当前输入法：" },
+        {
+          "id": "engine_picker",
+          "type": "picker",
+          "selected": "squirrel",
+          "constraints": { "position": "left", "size": { "width": 220 } },
+          "items": [
+            { "text": "鼠须管 Squirrel", "value": "squirrel" },
+            { "text": "元书 Cobra", "value": "cobra" },
+            { "text": "小企鹅 Fcitx5", "value": "fcitx5" },
+            { "type": "separator" },
+            { "text": "恢复 Workflow 配置", "value": "default" }
+          ],
+          "events": [
+            {
+              "triggers": "changed",
+              "action": {
+                "type": "script",
+                "src": "scripts/bridge.py",
+                "args": ["switch", "{value:engine_picker.selected.value}"],
+                "async": true
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "view",
+      "layout": "form",
+      "spacing": 8,
+      "constraints": { "grid": { "row": 0, "col": 1, "colweight": 0.5 } },
+      "components": [
+        { "type": "label", "text": "下载源：" },
+        {
+          "id": "source_picker",
+          "type": "picker",
+          "selected": "cnb",
+          "constraints": { "position": "left", "size": { "width": 220 } },
+          "items": [
+            { "text": "CNB", "value": "cnb" },
+            { "text": "GitHub", "value": "github" },
+            { "type": "separator" },
+            { "text": "恢复 Workflow 配置", "value": "default" }
+          ],
+          "events": [
+            {
+              "triggers": "changed",
+              "action": {
+                "type": "script",
+                "src": "scripts/bridge.py",
+                "args": ["configure", "source", "{value:source_picker.selected.value}"],
+                "async": true
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "view",
+      "layout": "form",
+      "spacing": 8,
+      "constraints": { "grid": { "row": 1, "col": 0, "colweight": 0.5 } },
+      "components": [
+        { "type": "label", "text": "方案类型：" },
+        {
+          "id": "schema_picker",
+          "type": "picker",
+          "selected": "moqi",
+          "constraints": { "position": "left", "size": { "width": 220 } },
+          "items": [
+            { "text": "标准版", "value": "base" },
+            { "text": "墨奇辅助码", "value": "moqi" },
+            { "text": "小鹤辅助码", "value": "flypy" },
+            { "text": "自然码辅助码", "value": "zrm" },
+            { "text": "虎码辅助码", "value": "tiger" },
+            { "text": "五笔辅助码", "value": "wubi" },
+            { "text": "汉心辅助码", "value": "hanxin" },
+            { "text": "首右辅助码", "value": "shouyou" },
+            { "type": "separator" },
+            { "text": "恢复 Workflow 配置", "value": "default" }
+          ],
+          "events": [
+            {
+              "triggers": "changed",
+              "action": {
+                "type": "script",
+                "src": "scripts/bridge.py",
+                "args": ["configure", "schema", "{value:schema_picker.selected.value}"],
+                "async": true
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "view",
+      "layout": "form",
+      "spacing": 8,
+      "constraints": { "grid": { "row": 1, "col": 1, "colweight": 0.5 } },
+      "components": [
+        { "type": "label", "text": "GitHub 加速：" },
+        {
+          "id": "accelerator_picker",
+          "type": "picker",
+          "selected": "none",
+          "enabled": false,
+          "constraints": { "position": "left", "size": { "width": 220 } },
+          "items": [
+            { "text": "不使用", "value": "none" },
+            { "text": "gh-proxy.com", "value": "gh-proxy" },
+            { "type": "separator" },
+            { "text": "恢复 Workflow 配置", "value": "default" }
+          ],
+          "events": [
+            {
+              "triggers": "changed",
+              "action": {
+                "type": "script",
+                "src": "scripts/bridge.py",
+                "args": ["configure", "github_download_accelerator", "{value:accelerator_picker.selected.value}"],
+                "async": true
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

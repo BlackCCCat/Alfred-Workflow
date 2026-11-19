@@ -38,6 +38,8 @@ class Alfred6WorkflowTests(unittest.TestCase):
         with zipfile.ZipFile(V6_PACKAGE) as archive:
             names = set(archive.namelist())
             self.assertIn("wanxiang.alfredui/ui.json", names)
+            settings_name = "wanxiang.alfredui/components/settings.json"
+            self.assertIn(settings_name, names)
             bridge_name = "wanxiang.alfredui/scripts/bridge.py"
             self.assertIn(bridge_name, names)
             self.assertTrue((archive.getinfo(bridge_name).external_attr >> 16) & 0o111)
@@ -46,10 +48,21 @@ class Alfred6WorkflowTests(unittest.TestCase):
             variables = ui["variablesconfig"]
             self.assertEqual(variables["command"]["src"], "args[0]")
             self.assertTrue(variables["github_token"]["scriptenv"])
-            engine_row = ui["window"]["root"]["components"][0]["components"][3]
-            self.assertEqual(engine_row["layout"], "form")
-            self.assertEqual(engine_row["components"][0]["text"], "当前输入法：")
-            self.assertEqual(engine_row["components"][1]["id"], "engine_picker")
+            header = ui["window"]["root"]["components"][0]
+            self.assertEqual(header["components"][2], "{file:components/settings.json}")
+            settings = json.loads(archive.read(settings_name))
+            self.assertEqual((settings["layout"], settings["rows"], settings["cols"]), ("flex", 2, 2))
+            pickers = {row["components"][1]["id"]: row["components"][1] for row in settings["components"]}
+            self.assertEqual(set(pickers), {"engine_picker", "source_picker", "schema_picker", "accelerator_picker"})
+            self.assertEqual(settings["components"][0]["components"][0]["text"], "当前输入法：")
+            self.assertEqual(settings["components"][1]["components"][0]["text"], "下载源：")
+            self.assertEqual(settings["components"][2]["components"][0]["text"], "方案类型：")
+            self.assertEqual(settings["components"][3]["components"][0]["text"], "GitHub 加速：")
+            for picker in pickers.values():
+                self.assertIn("default", {item.get("value") for item in picker["items"]})
+            progress = next(item for item in header["components"] if isinstance(item, dict) and item.get("id") == "download_progress")
+            self.assertTrue(progress["hidden"])
+            self.assertFalse(any(isinstance(item, dict) and item.get("id") in {"task_status", "task_detail", "task_bytes"} for item in header["components"]))
             content = ui["window"]["root"]["components"][1]
             self.assertEqual((content["layout"], content["rows"]), ("flex", 2))
             self.assertEqual(content["components"][0]["components"][1]["type"], "markdownarea")
@@ -66,6 +79,13 @@ class Alfred6WorkflowTests(unittest.TestCase):
                 payload = json.loads(result.stdout)
                 self.assertIn("download_progress", payload["update"]["ids"])
                 self.assertIn("scheme_record", payload["update"]["ids"])
+                self.assertTrue(payload["update"]["ids"]["download_progress"]["hidden"])
+                configured = subprocess.run(
+                    ["/usr/bin/python3", str(Path(directory) / bridge_name), "configure", "source", "github"],
+                    cwd=directory, capture_output=True, text=True, check=True,
+                )
+                self.assertEqual(json.loads(configured.stdout)["update"]["ids"]["source_picker"]["selected"], "github")
+                self.assertEqual(json.loads((Path(directory) / "cache" / "runtime_settings.json").read_text())["source"], "github")
 
     def test_plist_source_can_be_rebuilt(self):
         spec = importlib.util.spec_from_file_location("build_workflow_v6", BUILD_SCRIPT)

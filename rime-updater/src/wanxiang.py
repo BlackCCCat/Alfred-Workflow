@@ -504,14 +504,23 @@ def list_releases(include_model=False) -> list[dict]:
     if not include_model or any(_is_model_release(release) for release in releases):
         return releases
 
-    total = int(headers.get("X-Cnb-Total") or headers.get("X-CNB-Total") or len(releases))
     page_size = int(headers.get("X-Cnb-Page-Size") or headers.get("X-CNB-Page-Size") or len(releases) or 1)
-    last_page = (total + page_size - 1) // page_size
-    for page in range(2, last_page + 1):
+    total = int(headers.get("X-Cnb-Total") or headers.get("X-CNB-Total") or 0)
+    seen_tags = {_release_tag(release) for release in releases}
+    page = 2
+    while not total or (page - 1) * page_size < total:
         data, _headers = request_json(CNB_RELEASES_API, source="cnb", params={"page": page})
-        releases.extend(_extract_cnb_releases(data))
-        if any(_is_model_release(release) for release in releases):
+        page_releases = _extract_cnb_releases(data)
+        new_releases = [release for release in page_releases if _release_tag(release) not in seen_tags]
+        if not new_releases:
             break
+        releases.extend(new_releases)
+        seen_tags.update(_release_tag(release) for release in new_releases)
+        if any(_is_model_release(release) for release in new_releases):
+            break
+        if not total and len(page_releases) < page_size:
+            break
+        page += 1
     return releases
 
 

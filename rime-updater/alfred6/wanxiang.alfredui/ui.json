@@ -46,40 +46,8 @@
           "constraints": { "region": "top" },
           "components": [
             { "type": "label", "text": "万象 Rime 更新", "font": { "size": "large", "weight": "bold" } },
-            { "id": "source_status", "type": "label", "text": "读取配置中…", "colour": "secondaryLabelColor" },
             { "id": "path_status", "type": "label", "text": "", "colour": "secondaryLabelColor", "linebreak": "truncatemiddle", "selectable": true },
-            {
-              "type": "view",
-              "layout": "form",
-              "spacing": 12,
-              "components": [
-                { "type": "label", "text": "当前输入法：" },
-                {
-                  "id": "engine_picker",
-                  "type": "picker",
-                  "selected": "squirrel",
-                  "constraints": { "position": "left", "size": { "width": 280 } },
-                  "items": [
-                    { "text": "鼠须管 Squirrel", "value": "squirrel" },
-                    { "text": "元书 Cobra", "value": "cobra" },
-                    { "text": "小企鹅 Fcitx5", "value": "fcitx5" },
-                    { "type": "separator" },
-                    { "text": "恢复 Workflow 配置", "value": "default" }
-                  ],
-                  "events": [
-                    {
-                      "triggers": "changed",
-                      "action": {
-                        "type": "script",
-                        "src": "scripts/bridge.py",
-                        "args": ["switch", "{value:engine_picker.selected.value}"],
-                        "async": true
-                      }
-                    }
-                  ]
-                }
-              ]
-            },
+            "{file:components/settings.json}",
             { "id": "scheme_record", "type": "label", "text": "方案：读取中", "colour": "secondaryLabelColor" },
             { "id": "dict_record", "type": "label", "text": "词库：读取中", "colour": "secondaryLabelColor" },
             { "id": "model_record", "type": "label", "text": "模型：读取中", "colour": "secondaryLabelColor" },
@@ -96,10 +64,7 @@
                 { "type": "button", "text": "重新部署", "events": [{ "triggers": "actioned", "action": { "type": "script", "src": "scripts/bridge.py", "args": ["start", "deploy"], "async": true } }] }
               ]
             },
-            { "id": "task_status", "type": "label", "text": "准备就绪", "font": { "weight": "bold" } },
-            { "id": "task_detail", "type": "label", "text": "", "linebreak": "truncatetail" },
-            { "id": "download_progress", "type": "progress", "style": "linear", "progress": 0 },
-            { "id": "task_bytes", "type": "label", "text": "等待下载信息", "colour": "secondaryLabelColor" }
+            { "id": "download_progress", "type": "progress", "style": "linear", "progress": 0, "hidden": true }
           ]
         },
         {

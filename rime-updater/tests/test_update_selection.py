@@ -23,6 +23,27 @@ class UpdateSelectionTests(unittest.TestCase):
         self.assertEqual(request.call_count, 11)
         self.assertEqual(wanxiang._release_tag(releases[-1]), "model")
 
+    def test_cnb_model_release_is_found_without_total_header(self):
+        def request_json(_url, source=None, params=None):
+            page = (params or {}).get("page", 1)
+            release = {"tag_name": "model" if page == 13 else f"v{page}.0.0", "assets": []}
+            return {"releases": [release]}, {}
+
+        with patch.object(RimeConfig, "source", return_value="cnb"), patch.object(wanxiang, "request_json", side_effect=request_json) as request:
+            releases = wanxiang.list_releases(include_model=True)
+        self.assertEqual(request.call_count, 13)
+        self.assertEqual(wanxiang._release_tag(releases[-1]), "model")
+
+    def test_cnb_model_pagination_stops_on_repeated_page(self):
+        def request_json(_url, source=None, params=None):
+            page = (params or {}).get("page", 1)
+            return {"releases": [{"tag_name": "v1.0.0", "assets": []}]}, {}
+
+        with patch.object(RimeConfig, "source", return_value="cnb"), patch.object(wanxiang, "request_json", side_effect=request_json) as request:
+            releases = wanxiang.list_releases(include_model=True)
+        self.assertEqual(request.call_count, 2)
+        self.assertEqual(len(releases), 1)
+
     def test_all_skips_same_sha256_model_across_sources(self):
         with tempfile.TemporaryDirectory() as directory:
             rime_dir = Path(directory)

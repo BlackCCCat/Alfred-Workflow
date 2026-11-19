@@ -66,6 +66,13 @@ ENGINE_LABELS = {
     "fcitx5": "小企鹅 Fcitx5",
 }
 
+RUNTIME_OPTIONS = {
+    "engine": set(ENGINE_LABELS),
+    "source": {"cnb", "github"},
+    "schema": set(SCHEMA_LABELS),
+    "github_download_accelerator": {"none", *GITHUB_DOWNLOAD_ACCELERATORS},
+}
+
 SCHEME_ASSETS = {
     "base": "rime-wanxiang-base.zip",
     "moqi": "rime-wanxiang-moqi-fuzhu.zip",
@@ -127,11 +134,17 @@ class RimeConfig:
 
     @classmethod
     def source(cls) -> str:
+        runtime_source = load_runtime_settings().get("source")
+        if runtime_source in RUNTIME_OPTIONS["source"]:
+            return runtime_source
         source = (os.getenv("source") or os.getenv("download_source") or "cnb").strip().lower()
         return source if source in {"cnb", "github"} else "cnb"
 
     @classmethod
     def github_download_accelerator(cls) -> str:
+        runtime_accelerator = load_runtime_settings().get("github_download_accelerator")
+        if runtime_accelerator in RUNTIME_OPTIONS["github_download_accelerator"]:
+            return "" if runtime_accelerator == "none" else runtime_accelerator
         accelerator = (
             os.getenv("github_download_accelerator")
             or os.getenv("github_proxy")
@@ -147,6 +160,9 @@ class RimeConfig:
 
     @classmethod
     def schema(cls) -> str:
+        runtime_schema = load_runtime_settings().get("schema")
+        if runtime_schema in RUNTIME_OPTIONS["schema"]:
+            return runtime_schema
         schema = (os.getenv("schema") or "moqi").strip().lower()
         return schema if schema in SCHEMA_LABELS else "moqi"
 
@@ -194,25 +210,37 @@ def load_runtime_settings() -> dict:
     return data if isinstance(data, dict) else {}
 
 
-def set_runtime_engine(engine: str) -> None:
-    engine = (engine or "").strip().lower()
-    if engine not in ENGINE_LABELS:
-        raise ValueError(f"无效的输入法引擎：{engine}")
+def set_runtime_option(option: str, value: str) -> None:
+    value = (value or "").strip().lower()
+    if option not in RUNTIME_OPTIONS or value not in RUNTIME_OPTIONS[option]:
+        raise ValueError(f"无效的运行配置：{option}={value}")
+    data = load_runtime_settings()
+    data[option] = value
+    _write_runtime_settings(data)
+
+
+def clear_runtime_option(option: str) -> None:
+    if option not in RUNTIME_OPTIONS:
+        raise ValueError(f"无效的运行配置：{option}")
+    data = load_runtime_settings()
+    data.pop(option, None)
+    _write_runtime_settings(data)
+
+
+def _write_runtime_settings(data: dict) -> None:
+    if not any(key != "updated_at" for key in data):
+        RUNTIME_SETTINGS_FILE.unlink(missing_ok=True)
+        return
+    data["updated_at"] = datetime.now().strftime("%Y-%m-%dT%H:%M:%S")
     RUNTIME_SETTINGS_FILE.parent.mkdir(parents=True, exist_ok=True)
-    RUNTIME_SETTINGS_FILE.write_text(
-        json.dumps(
-            {
-                "engine": engine,
-                "updated_at": datetime.now().strftime("%Y-%m-%dT%H:%M:%S"),
-            },
-            ensure_ascii=False,
-            indent=2,
-        ),
-        encoding="utf-8",
-    )
+    temporary = RUNTIME_SETTINGS_FILE.with_suffix(".json.tmp")
+    temporary.write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8")
+    temporary.replace(RUNTIME_SETTINGS_FILE)
+
+
+def set_runtime_engine(engine: str) -> None:
+    set_runtime_option("engine", engine)
 
 
 def clear_runtime_engine() -> None:
-    path = RUNTIME_SETTINGS_FILE
-    if path.exists():
-        path.unlink()
+    clear_runtime_option("engine")
